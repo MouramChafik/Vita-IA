@@ -2,6 +2,7 @@
 // Composant serveur : les données sont lues avec la clé secrète Supabase, jamais dans le navigateur.
 
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import SiteHeader from "@/components/SiteHeader";
 import { formatHour } from "@/lib/ai-status-message";
 import { supabaseServer } from "@/lib/supabase-server";
@@ -43,7 +44,24 @@ function LoginForm({ error, configured }: { error: boolean; configured: boolean 
   );
 }
 
-export default async function SupervisionPage({ searchParams }: PageProps<"/supervision">) {
+// Avec cacheComponents, Next.js précalcule ce qui est stable. Cette page dépend du cookie
+// et de l'heure (données de requête) : on la rend dans un <Suspense>, calculé à chaque visite.
+export default function SupervisionPage(props: PageProps<"/supervision">) {
+  return (
+    <Suspense
+      fallback={
+        <>
+          <SiteHeader />
+          <p className="mx-auto max-w-6xl px-4 pt-10 text-muted sm:px-6">Chargement de la supervision…</p>
+        </>
+      }
+    >
+      <SupervisionContent {...props} />
+    </Suspense>
+  );
+}
+
+async function SupervisionContent({ searchParams }: PageProps<"/supervision">) {
   if (!(await isAdmin())) {
     const { erreur } = await searchParams;
     return (
