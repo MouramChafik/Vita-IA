@@ -2,6 +2,7 @@
 // Bouton flottant + panneau de conversation, présent sur toutes les pages.
 // N'importe quel bouton du site peut ouvrir Vita avec une question grâce à askVita().
 
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import VitaChat from "./VitaChat";
 import VitaLogo from "./VitaLogo";
@@ -16,6 +17,7 @@ export function askVita(question?: string) {
 export default function VitaWidget() {
   const [open, setOpen] = useState(false);
   const [incoming, setIncoming] = useState<{ text: string; id: number } | null>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     function onAsk(e: Event) {
@@ -33,6 +35,9 @@ export default function VitaWidget() {
       window.removeEventListener("keydown", onKey);
     };
   }, []);
+
+  // Sur la page /assistant, la conversation est déjà affichée en plein écran
+  if (pathname === "/assistant") return null;
 
   return (
     <>

@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "ingest": "tsx --env-file=.env.local scripts/ingest.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "eval": "tsx --env-file=.env.local eval/run-eval.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

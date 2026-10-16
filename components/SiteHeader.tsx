@@ -5,6 +5,7 @@ const NAV = [
   { href: "/#garanties", label: "Garanties" },
   { href: "/#documents", label: "Documents" },
   { href: "/assistant", label: "Assistant Vita" },
+  { href: "/extraction", label: "Extraction" },
   { href: "/#questions", label: "Questions fréquentes" },
 ];
 

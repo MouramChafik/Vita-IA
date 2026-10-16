@@ -89,17 +89,30 @@ export type Usage = {
   totalTokenCount?: number;
 };
 
+export type Turn = { role: "user" | "vita"; text: string };
+
 export async function generate(params: {
   system: string;
   prompt: string;
+  history?: Turn[]; // échanges précédents de la conversation
   temperature?: number;
 }): Promise<{ text: string; usage: Usage; model: string }> {
+  // Gemini attend l'historique sous forme de tours "user" / "model"
+  const previous = (params.history ?? []).map((t) => ({
+    role: t.role === "user" ? "user" : "model",
+    parts: [{ text: t.text }],
+  }));
   const body = {
     systemInstruction: { parts: [{ text: params.system }] },
-    contents: [{ role: "user", parts: [{ text: params.prompt }] }],
+    contents: [...previous, { role: "user", parts: [{ text: params.prompt }] }],
     generationConfig: { temperature: params.temperature ?? 0.2 },
   };
 
+  return callWithFallback(body);
+}
+
+// Essaie chaque modèle de GENERATION_MODELS jusqu'à ce que l'un réponde.
+async function callWithFallback(body: unknown): Promise<{ text: string; usage: Usage; model: string }> {
   let lastError: unknown;
   for (const model of GENERATION_MODELS) {
     try {
@@ -118,4 +131,30 @@ export async function generate(params: {
     }
   }
   throw lastError;
+}
+
+// ---------- Sortie structurée (JSON) ----------
+//
+// responseMimeType + responseSchema obligent Gemini à répondre avec un JSON qui respecte
+// le schéma donné. On revalide quand même avec Zod côté appelant : on ne fait pas confiance
+// aveuglément à la sortie d'un modèle.
+
+export async function generateJson(params: {
+  system: string;
+  prompt: string;
+  schema: object; // schéma au format OpenAPI attendu par Gemini
+  pdf?: Uint8Array; // document envoyé directement au modèle (inline_data)
+}): Promise<{ json: unknown; usage: Usage; model: string }> {
+  const parts: object[] = [];
+  if (params.pdf) {
+    parts.push({ inline_data: { mime_type: "application/pdf", data: Buffer.from(params.pdf).toString("base64") } });
+  }
+  parts.push({ text: params.prompt });
+
+  const { text, usage, model } = await callWithFallback({
+    systemInstruction: { parts: [{ text: params.system }] },
+    contents: [{ role: "user", parts }],
+    generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: params.schema },
+  });
+  return { json: JSON.parse(text), usage, model };
 }

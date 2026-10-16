@@ -1,5 +1,5 @@
 // Indexe un PDF dans Supabase.
-// Usage : npm run ingest -- data/vita-notice-2026.pdf "Notice d'information 2026"
+// Usage : npm run ingest -- public/documents/vita-notice-2026.pdf "Notice d'information 2026"
 
 import { readFile } from "node:fs/promises";
 import { basename } from "node:path";

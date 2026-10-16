@@ -20,9 +20,9 @@ const GARANTIES: { soin: string; detail: string; valeurs: [string, string, strin
 const PRIX = ["29 €", "48 €", "74 €"];
 
 const DOCUMENTS = [
-  { titre: "Notice d'information 2026", pages: "24 pages", question: "Que contient la notice d'information de Vita Mutuelle ?" },
-  { titre: "Tableau des garanties", pages: "3 pages", question: "Résume le tableau des garanties de la formule Équilibre." },
-  { titre: "Guide du 100 % Santé", pages: "8 pages", question: "Qu'est-ce que le 100 % Santé en optique et en dentaire ?" },
+  { titre: "Notice d'information 2026", pages: "4 pages", fichier: "/documents/vita-notice-2026.pdf", question: "Quels soins ne sont pas remboursés par Vita Mutuelle ?" },
+  { titre: "Tableau des garanties 2026", pages: "1 page", fichier: "/documents/vita-tableau-garanties-2026.pdf", question: "Que rembourse la formule Équilibre pour l'hospitalisation ?" },
+  { titre: "Guide du 100 % Santé", pages: "2 pages", fichier: "/documents/vita-guide-100-sante.pdf", question: "Qu'est-ce que le 100 % Santé pour les lunettes ?" },
 ];
 
 const FAQ = [
@@ -169,12 +169,20 @@ export default function Home() {
             <p className="mt-3 max-w-2xl text-white/65">
               Vita ne répond qu&apos;à partir de ces documents. Si l&apos;information n&apos;y figure pas, elle vous le dit.
             </p>
+            <Link href="/extraction" className="mt-5 inline-block text-sm font-semibold text-white underline underline-offset-4 hover:no-underline">
+              Extraire les garanties d&apos;un PDF en données structurées
+            </Link>
             <ul className="mt-10 divide-y divide-white/10 border-y border-white/10">
               {DOCUMENTS.map((d) => (
                 <li key={d.titre} className="flex flex-wrap items-center justify-between gap-4 py-5">
                   <div>
                     <p className="text-lg font-semibold">{d.titre}</p>
-                    <p className="text-sm text-white/55">PDF, {d.pages}</p>
+                    <p className="text-sm text-white/55">
+                      PDF, {d.pages} ·{" "}
+                      <a href={d.fichier} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-white">
+                        Ouvrir
+                      </a>
+                    </p>
                   </div>
                   <AskVitaButton
                     question={d.question}

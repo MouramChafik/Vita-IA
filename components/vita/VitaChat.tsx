@@ -63,11 +63,48 @@ type Props = {
   compact?: boolean;
 };
 
+// La conversation est gardée dans le navigateur (localStorage) jusqu'à « Nouvelle discussion ».
+// Même clé pour le widget et la page /assistant : on retrouve la même conversation partout.
+const STORAGE_KEY = "vita:conversation";
+const HISTORY_SENT = 6; // nombre de messages précédents envoyés à l'API pour comprendre les relances
+
+function loadConversation(): Message[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? (JSON.parse(saved) as Message[]) : [];
+  } catch {
+    return []; // navigation privée, stockage bloqué...
+  }
+}
+
 export default function VitaChat({ incomingQuestion, compact = false }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [restored, setRestored] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Au montage : on recharge la conversation enregistrée.
+  // (Pas dans useState directement : le rendu serveur n'a pas accès à localStorage.)
+  useEffect(() => {
+    setMessages(loadConversation());
+    setRestored(true);
+  }, []);
+
+  // À chaque changement : on enregistre
+  useEffect(() => {
+    if (!restored) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    } catch {
+      // stockage indisponible : la conversation reste en mémoire seulement
+    }
+  }, [messages, restored]);
+
+  function newConversation() {
+    setMessages([]);
+    setInput("");
+  }
 
   // Défiler vers le dernier message à chaque nouveauté
   useEffect(() => {
@@ -78,6 +115,12 @@ export default function VitaChat({ incomingQuestion, compact = false }: Props) {
     const question = text.trim();
     if (!question || loading) return;
 
+    // Historique envoyé à l'API : les derniers échanges réussis, pour comprendre « et avec Sérénité ? »
+    const history = messages
+      .filter((m) => !m.error)
+      .slice(-HISTORY_SENT)
+      .map((m) => ({ role: m.role, text: m.text }));
+
     setMessages((prev) => [...prev, { role: "user", text: question }]);
     setInput("");
     setLoading(true);
@@ -86,7 +129,7 @@ export default function VitaChat({ incomingQuestion, compact = false }: Props) {
       const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ question, history }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -166,6 +209,18 @@ export default function VitaChat({ incomingQuestion, compact = false }: Props) {
         <div ref={bottomRef} />
       </div>
 
+      {messages.length > 0 && (
+        <div className={`flex justify-end ${compact ? "px-3 pb-2" : "pb-2"}`}>
+          <button
+            type="button"
+            onClick={newConversation}
+            disabled={loading}
+            className="rounded-full border border-line bg-white px-3 py-1 text-xs font-medium text-muted hover:border-ink/30 hover:text-ink disabled:opacity-40"
+          >
+            Nouvelle discussion
+          </button>
+        </div>
+      )}
       <form onSubmit={onSubmit} className={`flex gap-2 border-t border-line bg-white ${compact ? "p-3" : "rounded-2xl border p-2"}`}>
         <label htmlFor={compact ? "vita-input-widget" : "vita-input"} className="sr-only">
           Votre question
