@@ -71,11 +71,11 @@ export default function ProductTable({ data }: { data: ProductTableData }) {
       <table className="hidden w-full border-separate border-spacing-0 text-left text-sm md:table">
         <thead>
           <tr>
-            <th scope="col" className="sticky top-[65px] z-10 w-[38%] border-b border-line bg-paper/95 px-4 pb-4 pt-5 align-bottom text-xs font-medium text-muted backdrop-blur">
+            <th scope="col" className="sticky top-[118px] z-10 w-[38%] border-b border-line bg-paper/95 px-4 pb-4 pt-5 align-bottom text-xs font-medium text-muted backdrop-blur">
               Garantie
             </th>
             {data.formules.map((f) => (
-              <th key={f.nom} scope="col" className="sticky top-[65px] z-10 border-b border-line bg-paper/95 px-4 pb-4 pt-5 align-bottom backdrop-blur">
+              <th key={f.nom} scope="col" className="sticky top-[118px] z-10 border-b border-line bg-paper/95 px-4 pb-4 pt-5 align-bottom backdrop-blur">
                 <span className="block font-[family-name:var(--font-bricolage)] text-lg font-bold">{f.nom}</span>
                 {f.prix ? (
                   <span className="mt-0.5 block text-sm font-normal text-muted">

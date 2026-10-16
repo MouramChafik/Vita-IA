@@ -5,6 +5,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import DocumentActions from "@/components/DocumentActions";
+import ProductNav from "@/components/ProductNav";
 import ProductTable, { type ProductTableData } from "@/components/ProductTable";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
@@ -32,6 +33,14 @@ const slug = (text: string) =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
+
+// Nom court pour la barre de navigation : « Orvalis Santé Jeunes » sous « Mutuelle Orvalis » -> « Santé Jeunes »
+function shortLabel(produit: string, organisme: string): string {
+  const brand = organisme.split(/\s+/).filter((w) => !/^mutuelle$/i.test(w));
+  const words = produit.split(/\s+/);
+  const rest = brand.length && words[0]?.toLowerCase() === brand[0].toLowerCase() ? words.slice(1) : words;
+  return rest.join(" ") || produit;
+}
 
 // Prépare les données (sérialisables) des tableaux de chaque produit
 function productsOf(offer: Offer): (ProductTableData & { anchor: string })[] {
@@ -69,38 +78,24 @@ export default async function GarantiesPage() {
     <>
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
-        {/* En-tête et sommaire */}
-        <header className="grid gap-10 pt-12 lg:grid-cols-[1fr_20rem] lg:items-start">
-          <div>
-            <h1 className="text-4xl font-bold leading-tight sm:text-5xl">Garanties et tarifs</h1>
-            <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted">
-              Comparez les formules soin par soin. Cliquez sur une garantie pour que Vita vous explique le calcul, avec la page
-              du document en source.
-            </p>
-          </div>
-          <nav aria-label="Sommaire des produits" className="rounded-2xl border border-line bg-white p-5">
-            <p className="text-sm font-semibold">Sur cette page</p>
-            <ul className="mt-3 space-y-3 text-sm">
-              {withProducts.map(({ offer, products }) => (
-                <li key={offer.key}>
-                  <span className="text-muted">{offer.table.organisme}</span>
-                  <ul className="mt-1 space-y-1">
-                    {products.map((p) => (
-                      <li key={p.anchor}>
-                        <a href={`#${p.anchor}`} className="font-medium hover:text-teal">
-                          {p.produit}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-            </ul>
-          </nav>
+        {/* En-tête compact : le contenu commence tout de suite */}
+        <header className="flex flex-wrap items-end justify-between gap-x-10 gap-y-3 pb-6 pt-10">
+          <h1 className="text-4xl font-bold leading-tight sm:text-5xl">Garanties et tarifs</h1>
+          <p className="max-w-md text-muted">
+            Comparez les formules soin par soin. Cliquez sur une garantie : Vita explique le calcul et cite la page du document.
+          </p>
         </header>
 
+        {/* Navigation entre produits, collante pendant le défilement */}
+        <ProductNav
+          groups={withProducts.map(({ offer, products }) => ({
+            organisme: offer.table.organisme,
+            products: products.map((p) => ({ anchor: p.anchor, label: shortLabel(p.produit, offer.table.organisme) })),
+          }))}
+        />
+
         {withProducts.map(({ offer, products }) => (
-          <section key={offer.key} aria-labelledby={`${offer.key}-title`} className="mt-16 border-t-2 border-ink pt-8">
+          <section key={offer.key} aria-labelledby={`${offer.key}-title`} className="mt-12 border-t-2 border-ink pt-8 first-of-type:mt-10">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-sm">
@@ -139,7 +134,7 @@ export default async function GarantiesPage() {
             </div>
 
             {products.map((p) => (
-              <article key={p.anchor} id={p.anchor} className="mt-10 scroll-mt-24">
+              <article key={p.anchor} id={p.anchor} className="mt-10 scroll-mt-[130px]">
                 <h3 className="text-xl font-bold">{p.produit}</h3>
                 <div className="mt-4">
                   <ProductTable data={p} />
