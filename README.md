@@ -50,7 +50,6 @@ Le détail technique de chaque brique suit ci-dessous.
 | Page | Rôle |
 | --- | --- |
 | `/` | Site de la mutuelle : formules, tableau des garanties, documents, FAQ. Vita est disponible partout via un widget. |
-| `/assistant` | Conversation plein écran avec Vita. Réponses avec citations `[1]`, extraits sources dépliables. |
 | `/extraction` | PDF vers JSON : chaque garantie (soin, formule, montant, unité, conditions, page). |
 
 Vita garde la conversation dans le navigateur jusqu'à ce que l'utilisateur clique sur **Nouvelle discussion**. Les derniers échanges sont envoyés à l'API, ce qui permet les relances du type « et avec la formule Sérénité ? ».

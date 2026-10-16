@@ -4,7 +4,7 @@ import VitaLogo from "./vita/VitaLogo";
 const NAV = [
   { href: "/garanties", label: "Garanties" },
   { href: "/#documents", label: "Documents" },
-  { href: "/assistant", label: "Assistant Vita" },
+  // { href: "/assistant", label: "Assistant Vita" }, // page masquée pour le moment
   { href: "/extraction", label: "Extraction" },
   { href: "/#questions", label: "Questions fréquentes" },
   { href: "/projet", label: "Le projet" },

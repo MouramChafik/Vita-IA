@@ -1,15 +1,22 @@
 // Page plein écran pour discuter avec Vita.
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import SiteHeader from "@/components/SiteHeader";
 import VitaChat from "@/components/vita/VitaChat";
 
+// Page masquée pour le moment : elle répond 404. Vita reste disponible partout via le widget.
+// Pour la réafficher : passer à true, puis remettre le lien du menu (SiteHeader) et l'entrée du sitemap.
+const ASSISTANT_PAGE_ENABLED = false;
+
 export const metadata: Metadata = {
   title: "Assistant Vita",
+  robots: { index: false },
   description: "Posez vos questions sur vos remboursements santé : Vita répond en langage simple et cite la page exacte du document.",
   alternates: { canonical: "/assistant" },
 };
 
 export default function AssistantPage() {
+  if (!ASSISTANT_PAGE_ENABLED) notFound();
   return (
     <>
       <SiteHeader />

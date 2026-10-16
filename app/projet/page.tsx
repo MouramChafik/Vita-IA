@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
+import AskVitaButton from "@/components/vita/AskVitaButton";
 
 export const metadata: Metadata = {
   title: "Le projet",
@@ -21,10 +22,13 @@ const RAG_STEPS = [
   { title: "Répondre", text: "Gemini rédige la réponse avec ces seuls passages et cite leur numéro. Chaque citation pointe vers la page du PDF." },
 ];
 
-const FEATURES = [
+const CTA_CLASS =
+  "mt-5 inline-block rounded-full border border-white/30 px-4 py-2 text-sm font-semibold hover:border-white hover:bg-white hover:text-ink";
+
+const FEATURES: { name: string; href: string | null; ask?: string; cta: string; what: string; why: string[] }[] = [
   {
     name: "Répondre avec les sources",
-    href: "/assistant",
+    href: null, // ouvre le widget Vita
     cta: "Poser une question",
     what: "Une question en langage courant, une réponse en langage simple. Chaque chiffre porte un numéro de source : un clic déplie l'extrait, un autre ouvre le PDF à la bonne page.",
     why: [
@@ -57,7 +61,8 @@ const FEATURES = [
   },
   {
     name: "Orienter selon sa situation",
-    href: "/assistant",
+    href: null,
+    ask: "Quelle formule me conseillez-vous pour ma famille ?",
     cta: "Décrire ma situation",
     what: "« Je suis marié, deux enfants, mon épouse est infirmière libérale. » Vita pose les questions manquantes avec des réponses en un clic, puis propose des pistes santé et prévoyance, chacune justifiée.",
     why: [
@@ -219,12 +224,16 @@ export default function ProjetPage() {
                   <div>
                     <h3 className="text-2xl font-bold">{f.name}</h3>
                     <p className="mt-3 leading-relaxed text-white/75">{f.what}</p>
-                    <Link
-                      href={f.href}
-                      className="mt-5 inline-block rounded-full border border-white/30 px-4 py-2 text-sm font-semibold hover:border-white hover:bg-white hover:text-ink"
-                    >
-                      {f.cta}
-                    </Link>
+                    {f.href ? (
+                      <Link href={f.href} className={CTA_CLASS}>
+                        {f.cta}
+                      </Link>
+                    ) : (
+                      // Pas de page dédiée : le bouton ouvre le widget Vita
+                      <AskVitaButton question={f.ask} className={CTA_CLASS}>
+                        {f.cta}
+                      </AskVitaButton>
+                    )}
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-teal-soft">Pourquoi ce choix</p>
@@ -288,9 +297,9 @@ export default function ProjetPage() {
             <p className="max-w-2xl font-[family-name:var(--font-bricolage)] text-2xl font-bold leading-snug sm:text-3xl">
               Vita rend les contrats santé compréhensibles, avec une IA qui prouve chacune de ses réponses.
             </p>
-            <Link href="/assistant" className="rounded-full bg-vita px-6 py-3 font-semibold text-white shadow-lg shadow-vita/25 hover:brightness-110">
+            <AskVitaButton className="rounded-full bg-vita px-6 py-3 font-semibold text-white shadow-lg shadow-vita/25 hover:brightness-110">
               Essayer Vita
-            </Link>
+            </AskVitaButton>
           </div>
         </section>
       </main>
