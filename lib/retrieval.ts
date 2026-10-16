@@ -4,6 +4,7 @@ import { supabaseServer } from "./supabase-server";
 
 export type Passage = {
   id: number;
+  document_id: string;
   document_title: string;
   page: number;
   content: string;

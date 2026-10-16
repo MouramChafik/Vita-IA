@@ -18,6 +18,8 @@ export async function ingestPdf(params: {
   fileName: string;
   title: string;
   sourceUrl?: string;
+  extraction?: unknown; // garanties extraites, affichées sur la page /garanties
+  origin?: "script" | "extraction";
 }) {
   const supabase = supabaseServer();
 
@@ -43,7 +45,14 @@ export async function ingestPdf(params: {
   // 5. Ligne "documents"
   const { data: doc, error: docError } = await supabase
     .from("documents")
-    .insert({ title: params.title, source_url: params.sourceUrl ?? null, storage_path: storagePath, page_count: pages.length })
+    .insert({
+      title: params.title,
+      source_url: params.sourceUrl ?? null,
+      storage_path: storagePath,
+      page_count: pages.length,
+      ...(params.extraction ? { extraction: params.extraction } : {}),
+      ...(params.origin ? { origin: params.origin } : {}),
+    })
     .select("id")
     .single();
   if (docError) throw docError;

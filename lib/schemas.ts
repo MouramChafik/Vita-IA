@@ -18,14 +18,20 @@ export const GuaranteeSchema = z.object({
   page: z.number().int().positive().nullable(), // page du document où figure l'information
 });
 
+export const FormulaSchema = z.object({
+  nom: z.string().min(1), // ex. "Équilibre"
+  cotisation_mensuelle: z.number().nullable(), // en euros, si le document l'indique
+});
+
 export const GuaranteeTableSchema = z.object({
   organisme: z.string(),
   annee: z.number().int().nullable(),
-  formules: z.array(z.string()),
+  formules: z.array(FormulaSchema), // dans l'ordre du document
   garanties: z.array(GuaranteeSchema),
 });
 
 export type Guarantee = z.infer<typeof GuaranteeSchema>;
+export type Formula = z.infer<typeof FormulaSchema>;
 export type GuaranteeTable = z.infer<typeof GuaranteeTableSchema>;
 
 // Même structure, au format attendu par l'API Gemini
@@ -34,7 +40,17 @@ export const GEMINI_GUARANTEE_SCHEMA = {
   properties: {
     organisme: { type: "STRING" },
     annee: { type: "INTEGER", nullable: true },
-    formules: { type: "ARRAY", items: { type: "STRING" } },
+    formules: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          nom: { type: "STRING" },
+          cotisation_mensuelle: { type: "NUMBER", nullable: true },
+        },
+        required: ["nom", "cotisation_mensuelle"],
+      },
+    },
     garanties: {
       type: "ARRAY",
       items: {

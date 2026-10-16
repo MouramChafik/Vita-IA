@@ -1,12 +1,11 @@
 // Pipeline RAG, partagé par la route /api/ask (en flux) et le script d'évaluation (en une fois).
 // question -> passages proches (pgvector) -> prompt avec extraits -> Gemini -> réponse + sources
 
-import { documentUrl } from "./documents";
 import { generate, type Turn, type Usage } from "./gemini";
 import { buildPrompt, citedNumbers, NOT_FOUND, splitFollowups, SYSTEM_PROMPT } from "./prompt";
 import { searchPassages, type Passage } from "./retrieval";
 
-export type Source = { n: number; title: string; page: number; excerpt: string; similarity: number; url: string | null };
+export type Source = { n: number; title: string; page: number; excerpt: string; similarity: number; url: string };
 
 export type RagAnswer = {
   answer: string;
@@ -49,7 +48,7 @@ export function finalize(text: string, passages: Passage[]) {
         page: p.page,
         excerpt: p.content,
         similarity: p.similarity,
-        url: documentUrl(p.document_title, p.page),
+        url: `/api/documents/${p.document_id}#page=${p.page}`, // redirige vers le PDF stocké dans Supabase
       };
     });
   return { answer, followups, sources };

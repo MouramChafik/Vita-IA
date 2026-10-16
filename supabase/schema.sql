@@ -11,6 +11,8 @@ create table if not exists public.documents (
   source_url  text,                      -- lien public d'origine (notice en ligne, Légifrance...)
   storage_path text,                     -- chemin du PDF dans Supabase Storage
   page_count  int,
+  extraction  jsonb,                     -- garanties extraites (JSON validé par Zod), page /garanties
+  origin      text not null default 'script' check (origin in ('script', 'extraction')), -- 'extraction' = supprimable
   created_at  timestamptz not null default now()
 );
 

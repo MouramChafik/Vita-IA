@@ -4,7 +4,11 @@ import { GuaranteeTableSchema } from "../lib/schemas";
 const valid = {
   organisme: "Vita Mutuelle",
   annee: 2026,
-  formules: ["Essentielle", "Équilibre", "Sérénité"],
+  formules: [
+    { nom: "Essentielle", cotisation_mensuelle: 29 },
+    { nom: "Équilibre", cotisation_mensuelle: 48 },
+    { nom: "Sérénité", cotisation_mensuelle: null },
+  ],
   garanties: [
     { categorie: "optique", soin: "Lunettes hors 100 % Santé", formule: "Équilibre", valeur: 200, unite: "euros par an", conditions: null, page: 1 },
     { categorie: "hospitalisation", soin: "Chambre particulière", formule: "Essentielle", valeur: null, unite: "non couvert", conditions: null, page: 1 },

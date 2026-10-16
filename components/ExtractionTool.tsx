@@ -1,6 +1,9 @@
 "use client";
 // Choix d'un PDF (document de démo ou fichier personnel) -> appel à /api/extract -> tableau + JSON brut.
+// Ensuite, « Publier sur le site » envoie le PDF et l'extraction à /api/documents :
+// Vita indexe le document et ses garanties apparaissent sur la page /garanties.
 
+import Link from "next/link";
 import { useState } from "react";
 import { aiUnavailableMessage } from "@/lib/ai-status-message";
 import type { GuaranteeTable } from "@/lib/schemas";
@@ -22,11 +25,34 @@ export default function ExtractionTool() {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showJson, setShowJson] = useState(false);
+  const [source, setSource] = useState<{ file: Blob; name: string } | null>(null); // PDF extrait, gardé pour la publication
+  const [title, setTitle] = useState("");
+  const [publish, setPublish] = useState<{ state: "idle" | "pending" | "done" | "error"; message?: string }>({ state: "idle" });
+
+  async function publishDocument() {
+    if (!source || !result) return;
+    setPublish({ state: "pending" });
+    const form = new FormData();
+    form.append("file", source.file, source.name);
+    form.append("title", title);
+    // On envoie l'extraction déjà faite : pas de second appel à l'IA
+    const { organisme, annee, formules, garanties } = result;
+    form.append("extraction", JSON.stringify({ organisme, annee, formules, garanties }));
+    const res = await fetch("/api/documents", { method: "POST", body: form });
+    const data = await res.json().catch(() => ({}));
+    setPublish(
+      res.ok
+        ? { state: "done", message: `Publié : ${data.chunks} passages indexés pour Vita.` }
+        : { state: "error", message: data.error ?? "La publication a échoué." },
+    );
+  }
 
   async function extract(file: Blob, name: string) {
     setLoading(name);
     setError(null);
     setResult(null);
+    setPublish({ state: "idle" });
+    setSource({ file, name });
     try {
       const form = new FormData();
       form.append("file", file, name);
@@ -42,6 +68,7 @@ export default function ExtractionTool() {
         );
       }
       setResult(data);
+      setTitle(data.annee ? `${data.organisme} ${data.annee}` : data.organisme);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -96,6 +123,49 @@ export default function ExtractionTool() {
             <p className="text-sm text-muted">
               {result.garanties.length} garanties extraites{result.model ? ` avec ${result.model}` : ""}
             </p>
+          </div>
+
+          {/* Publication : le document rejoint le site et la base de connaissances de Vita */}
+          <div className="mt-4 rounded-2xl border border-vita/25 bg-vita-soft/40 p-4">
+            {publish.state === "done" ? (
+              <p className="text-sm">
+                {publish.message}{" "}
+                <Link href="/garanties" className="font-semibold text-vita underline underline-offset-4">
+                  Voir la page Garanties
+                </Link>
+              </p>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  publishDocument();
+                }}
+                className="flex flex-wrap items-end gap-3"
+              >
+                <label className="min-w-0 flex-1 text-sm">
+                  <span className="mb-1 block font-medium">Titre affiché sur le site</span>
+                  <input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                    minLength={3}
+                    maxLength={120}
+                    className="w-full rounded-xl border border-line bg-white px-3 py-2"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  disabled={publish.state === "pending"}
+                  className="rounded-full bg-vita px-5 py-2.5 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-50"
+                >
+                  {publish.state === "pending" ? "Publication…" : "Publier sur le site"}
+                </button>
+                <p className="w-full text-xs text-muted">
+                  Le PDF est indexé pour Vita et ses garanties s&apos;affichent sur la page Garanties. Vous pourrez le supprimer depuis cette page.
+                </p>
+                {publish.state === "error" && <p className="w-full text-sm text-red-700">{publish.message}</p>}
+              </form>
+            )}
           </div>
 
           <div className="mt-4 overflow-x-auto rounded-2xl border border-line bg-white">

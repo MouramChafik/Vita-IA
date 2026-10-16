@@ -11,6 +11,8 @@ Règles :
 - "valeur" est le nombre tel qu'écrit dans le document (150 pour "150 % BR", 200 pour "200 euros").
 - Si un soin n'est pas couvert par une formule, mets valeur à null et unite à "non couvert".
 - "conditions" résume les limites (plafond, délai, fréquence) ou vaut null.
+- "formules" liste les formules dans l'ordre du document, avec leur cotisation mensuelle en euros si elle est indiquée (sinon null).
+- "soin" doit être court et identique pour les trois formules d'un même soin.
 - N'invente rien : n'extrais que ce qui figure dans le document.`;
 
 export const MAX_PDF_BYTES = 5 * 1024 * 1024; // limite raisonnable pour l'envoi inline
