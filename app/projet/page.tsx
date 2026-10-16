@@ -66,17 +66,6 @@ const FEATURES = [
       "Les questions ne portent jamais sur la santé : seulement le foyer, l'activité, les besoins et le budget.",
     ],
   },
-  {
-    name: "Superviser",
-    href: "/supervision",
-    cta: "Ouvrir la supervision",
-    what: "Une page protégée par mot de passe suit l'usage : questions du jour, quota par modèle, temps de réponse, tokens consommés, erreurs et avis 👍 / 👎.",
-    why: [
-      "Une IA en production se surveille comme un service : coût, lenteur et erreurs doivent se voir avant que les utilisateurs ne s'en plaignent.",
-      "Les votes des utilisateurs signalent les réponses à améliorer et alimentent le jeu d'évaluation.",
-      "Si un modèle est saturé ou à court de quota, Vita bascule sur un modèle de secours et annonce l'heure de retour du service.",
-    ],
-  },
 ];
 
 const SAFEGUARDS = [

@@ -41,7 +41,7 @@ Question → vecteur → recherche des passages les plus proches → l'IA répon
 - l'IA ne peut répondre qu'à partir des extraits fournis, et doit les citer ;
 - pour l'orientation, ce sont **des règles transparentes** qui choisissent les pistes, l'IA ne fait que les expliquer ;
 - **un jeu de 30 questions de référence** mesure automatiquement si la bonne source est trouvée, si la réponse est juste et si rien n'est inventé, pour détecter toute régression ;
-- **une page de supervision** suit l'utilisation : questions, temps de réponse, coût en tokens, erreurs, avis des utilisateurs.
+- **chaque requête est journalisée** : temps de réponse, coût en tokens, erreurs, avis des utilisateurs.
 
 Le détail technique de chaque brique suit ci-dessous.
 
