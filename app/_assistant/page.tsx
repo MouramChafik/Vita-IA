@@ -1,22 +1,19 @@
 // Page plein écran pour discuter avec Vita.
+// MASQUÉE POUR LE MOMENT : le dossier s'appelle « _assistant » ; Next.js ignore les dossiers
+// qui commencent par « _ », donc /assistant affiche la page 404. Vita reste disponible via le widget.
+// Pour la réafficher : renommer le dossier en « assistant », puis décommenter le lien du menu
+// (components/SiteHeader.tsx) et l'entrée du sitemap (app/sitemap.ts).
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import SiteHeader from "@/components/SiteHeader";
 import VitaChat from "@/components/vita/VitaChat";
 
-// Page masquée pour le moment : elle répond 404. Vita reste disponible partout via le widget.
-// Pour la réafficher : passer à true, puis remettre le lien du menu (SiteHeader) et l'entrée du sitemap.
-const ASSISTANT_PAGE_ENABLED = false;
-
 export const metadata: Metadata = {
   title: "Assistant Vita",
-  robots: { index: false },
   description: "Posez vos questions sur vos remboursements santé : Vita répond en langage simple et cite la page exacte du document.",
   alternates: { canonical: "/assistant" },
 };
 
 export default function AssistantPage() {
-  if (!ASSISTANT_PAGE_ENABLED) notFound();
   return (
     <>
       <SiteHeader />
