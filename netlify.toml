@@ -1,0 +1,10 @@
+# Configuration Netlify (Next.js détecté automatiquement par le runtime officiel)
+[build]
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # L'URL d'un projet Supabase n'est pas un secret (seules les clés le sont) :
+  # elle apparaît normalement dans le cache des pages précalculées.
+  # Les vraies clés (GEMINI_API_KEY, SUPABASE_SERVICE_ROLE_KEY, ADMIN_PASSWORD) restent analysées.
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL"
