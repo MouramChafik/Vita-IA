@@ -1,10 +1,49 @@
 # Vita · assistant RAG pour l'assurance santé
 
-Vita est l'assistante IA de **Vita Mutuelle**, une mutuelle fictive. Elle répond aux questions sur les remboursements en lisant les documents de la mutuelle, et **cite la page exacte** qui justifie chaque réponse. Si l'information n'est pas dans les documents, elle le dit au lieu d'inventer.
-
-Le site sait aussi **extraire les garanties d'un PDF en JSON structuré**, validé avec Zod.
-
 > Projet personnel de démonstration. Vita Mutuelle, ses garanties et ses tarifs sont fictifs. Les documents ont été rédigés pour le projet : aucun document interne d'un assureur réel n'est utilisé.
+
+**En une phrase :** Vita rend les contrats santé compréhensibles, avec une IA qui prouve chacune de ses réponses.
+
+## Pourquoi ce projet ?
+
+Les contrats de mutuelle sont **difficiles à comprendre**. Les notices font des dizaines de pages, les tableaux de garanties parlent en « % BR » et en « frais réels », et la question la plus simple (« combien je serai remboursé ? ») demande souvent d'appeler un conseiller.
+
+Les assistants IA classiques répondent vite, mais ils **inventent parfois des chiffres**. Dans l'assurance, une réponse fausse n'est pas acceptable.
+
+L'idée de Vita : un assistant qui répond **uniquement à partir des documents du contrat**, qui **montre la page source** de chaque réponse, et qui dit « je ne sais pas » quand l'information n'y est pas.
+
+## Que fait le projet ?
+
+Vita est un site de mutuelle (fictive) avec une assistante IA intégrée :
+
+1. **Répondre avec les sources** : « Combien pour un dermatologue en secteur 2 ? » → réponse en langage simple, chaque chiffre relié à la page du PDF, consultable en un clic.
+2. **Comparer les offres** : une page Garanties présente chaque produit (formules, tarifs, remboursements soin par soin).
+3. **Transformer un PDF en données** : on dépose le tableau de garanties d'une mutuelle, et ses produits et tarifs sont extraits automatiquement, publiés sur le site et appris par l'assistante.
+4. **Orienter selon sa situation** : « Je suis marié, deux enfants, mon épouse est infirmière libérale » → Vita pose les questions utiles, puis propose des pistes (santé, prévoyance) en expliquant pourquoi. Elle oriente, elle ne décide pas.
+
+## Comment ça marche ?
+
+**La technique du RAG** (génération augmentée par recherche) :
+
+```
+PDF → découpage en passages → chaque passage devient un vecteur (son « sens »)
+                                              ↓
+Question → vecteur → recherche des passages les plus proches → l'IA répond avec ces seuls passages + citations
+```
+
+**Les briques :**
+- **Next.js** : le site et l'API dans un seul projet ; les clés restent côté serveur.
+- **Google Gemini** : les embeddings (le « sens » des textes) et la rédaction des réponses.
+- **Supabase (pgvector)** : stockage des documents et recherche par similarité.
+- **Zod** : vérifie que chaque donnée extraite par l'IA respecte le format attendu.
+
+**Les garde-fous de fiabilité :**
+- l'IA ne peut répondre qu'à partir des extraits fournis, et doit les citer ;
+- pour l'orientation, ce sont **des règles transparentes** qui choisissent les pistes, l'IA ne fait que les expliquer ;
+- **un jeu de 30 questions de référence** mesure automatiquement si la bonne source est trouvée, si la réponse est juste et si rien n'est inventé, pour détecter toute régression ;
+- **une page de supervision** suit l'utilisation : questions, temps de réponse, coût en tokens, erreurs, avis des utilisateurs.
+
+Le détail technique de chaque brique suit ci-dessous.
 
 ## Ce que fait l'application
 
