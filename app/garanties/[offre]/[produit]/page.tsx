@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import OfferHeader from "@/components/OfferHeader";
 import ProductCard from "@/components/ProductCard";
-import ProductIllustration, { themeFor } from "@/components/ProductIllustration";
+import ProductImage, { PHOTOS, themeFor } from "@/components/ProductImage";
 import ProductTable from "@/components/ProductTable";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
@@ -97,7 +97,15 @@ async function ProductContent({ params }: { params: Props["params"] }) {
             </a>
           </div>
         </div>
-        <ProductIllustration theme={theme} className="aspect-[16/10] w-full rounded-3xl" />
+        <figure>
+          <ProductImage theme={theme} priority sizes="(min-width: 768px) 45vw, 100vw" className="aspect-[16/10] w-full rounded-3xl" />
+          <figcaption className="mt-2 text-right text-xs text-muted">
+            Photo :{" "}
+            <a href={PHOTOS[theme].page} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-ink">
+              {PHOTOS[theme].author}, Unsplash
+            </a>
+          </figcaption>
+        </figure>
       </header>
 
       {/* Formules et tarifs */}

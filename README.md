@@ -142,6 +142,10 @@ eval/                      questions de référence, notation, script d'évaluat
 tests/                     tests Vitest
 ```
 
+## Crédits photos
+
+Les photos des produits sont libres de droits ([licence Unsplash](https://unsplash.com/license)) : National Cancer Institute, Eliott Reyna, Hector Reyes, Ryno Marais, Mike Scheid, Age Cymru, David Travis et SoyBreno. Chaque page produit crédite sa photo.
+
 ## Stack
 
 Next.js (App Router) · TypeScript · Tailwind CSS v4 · Google Gemini (`gemini-2.5-flash`, `gemini-embedding-001`) · Supabase (Postgres, pgvector, Storage) · unpdf · Zod · Vitest

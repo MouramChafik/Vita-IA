@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { themeFor } from "../components/ProductIllustration";
+import { themeFor } from "../components/ProductImage";
 import { formatPrice, productsOf, shortName, slugify } from "../lib/offers";
 import { VITA_TABLE } from "../lib/vita-catalog";
 

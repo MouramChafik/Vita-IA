@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { CATEGORY_LABELS } from "@/lib/guarantee-table";
 import { formatPrice, productHref, type Product } from "@/lib/offers";
-import ProductIllustration, { themeFor } from "./ProductIllustration";
+import ProductImage, { themeFor } from "./ProductImage";
 
 // wide : carte horizontale, quand l'organisme n'a qu'un produit (évite une carte seule dans une grille vide)
 export default function ProductCard({
@@ -26,9 +26,10 @@ export default function ProductCard({
       href={productHref(offerKey, product.slug)}
       className={`group flex flex-col overflow-hidden rounded-3xl ${wide ? "md:flex-row" : ""} border border-line bg-white transition hover:border-ink/25 hover:shadow-[0_24px_50px_-30px_rgba(15,42,46,0.45)]`}
     >
-      <ProductIllustration
+      <ProductImage
         theme={themeFor(product.name, product.categories)}
         className={`aspect-[16/9] w-full ${wide ? "md:aspect-auto md:w-[45%] md:shrink-0" : ""}`}
+        sizes={wide ? "(min-width: 768px) 45vw, 100vw" : undefined}
       />
       <div className={`flex flex-1 flex-col p-5 ${wide ? "md:p-8" : ""}`}>
         <p className="text-xs font-medium text-muted">{organisme}</p>
