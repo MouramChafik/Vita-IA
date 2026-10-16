@@ -3,7 +3,11 @@ import type { Metadata } from "next";
 import SiteHeader from "@/components/SiteHeader";
 import ExtractionTool from "@/components/ExtractionTool";
 
-export const metadata: Metadata = { title: "Extraction des garanties · Vita Mutuelle" };
+export const metadata: Metadata = {
+  title: "Extraction des garanties",
+  description: "Transformez le tableau de garanties d'une mutuelle (PDF) en données structurées : formules, tarifs et remboursements, soin par soin.",
+  alternates: { canonical: "/extraction" },
+};
 
 export default function ExtractionPage() {
   return (

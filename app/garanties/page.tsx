@@ -10,7 +10,11 @@ import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import { getOffers } from "@/lib/offers";
 
-export const metadata: Metadata = { title: "Garanties et tarifs · Vita Mutuelle" };
+export const metadata: Metadata = {
+  title: "Garanties et tarifs",
+  description: "Comparez les formules santé et prévoyance : tarifs mensuels et remboursements, soin par soin (consultations, optique, dentaire, hospitalisation).",
+  alternates: { canonical: "/garanties" },
+};
 
 export default async function GarantiesPage() {
   const offers = await getOffers();

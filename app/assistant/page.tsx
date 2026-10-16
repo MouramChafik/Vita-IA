@@ -3,7 +3,11 @@ import type { Metadata } from "next";
 import SiteHeader from "@/components/SiteHeader";
 import VitaChat from "@/components/vita/VitaChat";
 
-export const metadata: Metadata = { title: "Assistant Vita · Vita Mutuelle" };
+export const metadata: Metadata = {
+  title: "Assistant Vita",
+  description: "Posez vos questions sur vos remboursements santé : Vita répond en langage simple et cite la page exacte du document.",
+  alternates: { canonical: "/assistant" },
+};
 
 export default function AssistantPage() {
   return (

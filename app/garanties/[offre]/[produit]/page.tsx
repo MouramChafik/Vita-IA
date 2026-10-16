@@ -11,8 +11,10 @@ import ProductImage, { PHOTOS, themeFor } from "@/components/ProductImage";
 import ProductTable from "@/components/ProductTable";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
+import JsonLd from "@/components/JsonLd";
 import AskVitaButton from "@/components/vita/AskVitaButton";
-import { formatPrice, getOffers } from "@/lib/offers";
+import { formatPrice, getOffers, productHref } from "@/lib/offers";
+import { SITE_URL } from "@/lib/site";
 
 type Props = PageProps<"/garanties/[offre]/[produit]">;
 
@@ -32,7 +34,19 @@ async function find(params: Props["params"]) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const found = await find(params);
-  return { title: found ? `${found.product.name} · ${found.offer.table.organisme}` : "Produit introuvable" };
+  if (!found) return { title: "Produit introuvable", robots: { index: false } };
+  const { offer, product } = found;
+  const price = product.minPrice !== null ? `dès ${formatPrice(product.minPrice)} par mois` : "tarif sur devis";
+  const url = productHref(offer.key, product.slug);
+  const description = `${product.name} (${offer.table.organisme}) : ${product.formules.length} formule${
+    product.formules.length > 1 ? "s" : ""
+  }, ${price}. ${product.guaranteeCount} garanties détaillées : ${product.groups.map((g) => g.label.toLowerCase()).join(", ")}.`;
+  return {
+    title: `${product.name} · ${offer.table.organisme}`,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title: product.name, description, url },
+  };
 }
 
 export default function ProductPage(props: Props) {
@@ -54,8 +68,33 @@ async function ProductContent({ params }: { params: Props["params"] }) {
   const others = offer.products.filter((p) => p.slug !== product.slug).slice(0, 3);
   const theme = themeFor(product.name, product.categories);
 
+  // Données structurées : le produit, ses formules (prix mensuel) et le fil d'Ariane
+  const url = `${SITE_URL}${productHref(offer.key, product.slug)}`;
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": theme === "sante" || theme === "jeunes" || theme === "senior" ? "HealthInsurancePlan" : "FinancialProduct",
+        name: product.name,
+        url,
+        provider: { "@type": "Organization", name: offer.table.organisme },
+        offers: offer.table.formules
+          .filter((f) => f.produit.toLowerCase() === product.name.toLowerCase() && f.cotisation_mensuelle !== null)
+          .map((f) => ({ "@type": "Offer", name: f.nom, price: f.cotisation_mensuelle, priceCurrency: "EUR", description: "Cotisation mensuelle par adulte" })),
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Garanties", item: `${SITE_URL}/garanties` },
+          { "@type": "ListItem", position: 2, name: product.name, item: url },
+        ],
+      },
+    ],
+  };
+
   return (
     <main className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
+      <JsonLd data={structuredData} />
       <nav aria-label="Fil d'Ariane" className="pt-8 text-sm text-muted">
         <Link href="/garanties" className="hover:text-ink">
           Garanties

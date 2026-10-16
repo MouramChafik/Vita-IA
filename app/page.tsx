@@ -4,7 +4,9 @@
 import Link from "next/link";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import JsonLd from "@/components/JsonLd";
 import AskVitaButton from "@/components/vita/AskVitaButton";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
 const FORMULES = ["Essentielle", "Équilibre", "Sérénité"] as const;
 
@@ -40,9 +42,30 @@ const FAQ = [
   },
 ];
 
+// Données structurées : l'organisme, le site et la FAQ (éligible aux résultats enrichis de Google)
+const STRUCTURED_DATA = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "InsuranceAgency",
+      "@id": `${SITE_URL}/#organisation`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: `${SITE_URL}/icon.svg`,
+      description: SITE_DESCRIPTION,
+    },
+    { "@type": "WebSite", "@id": `${SITE_URL}/#site`, name: SITE_NAME, url: SITE_URL, inLanguage: "fr-FR", publisher: { "@id": `${SITE_URL}/#organisation` } },
+    {
+      "@type": "FAQPage",
+      mainEntity: FAQ.map((item) => ({ "@type": "Question", name: item.q, acceptedAnswer: { "@type": "Answer", text: item.r } })),
+    },
+  ],
+};
+
 export default function Home() {
   return (
     <>
+      <JsonLd data={STRUCTURED_DATA} />
       <SiteHeader />
       <main>
         {/* Hero : on montre tout de suite ce qui distingue le site, une réponse sourcée */}

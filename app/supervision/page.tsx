@@ -10,7 +10,7 @@ import { computeStats, DAILY_LIMITS, nextQuotaReset, quotaDayStart, type QueryLo
 import { isAdmin } from "@/lib/admin";
 import { login, logout } from "./actions";
 
-export const metadata: Metadata = { title: "Supervision · Vita Mutuelle", robots: { index: false } };
+export const metadata: Metadata = { title: "Supervision", robots: { index: false, follow: false } };
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
