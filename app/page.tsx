@@ -82,8 +82,8 @@ export default function Home() {
               <AskVitaButton className="rounded-full bg-vita px-6 py-3 font-semibold text-white shadow-lg shadow-vita/25 hover:brightness-110">
                 Poser une question à Vita
               </AskVitaButton>
-              <Link href="#garanties" className="rounded-full border border-ink/15 px-6 py-3 font-semibold hover:border-ink/40">
-                Voir les garanties
+              <Link href="#comparatif" className="rounded-full border border-ink/15 px-6 py-3 font-semibold hover:border-ink/40">
+                Comparer les formules
               </Link>
             </div>
           </div>
@@ -114,7 +114,7 @@ export default function Home() {
         </section>
 
         {/* Garanties : un vrai tableau, plus lisible que des cartes pour comparer */}
-        <section id="garanties" className="scroll-mt-20 border-y border-line bg-white py-20">
+        <section id="comparatif" className="scroll-mt-20 border-y border-line bg-white py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <h2 className="text-3xl font-bold sm:text-4xl">Trois formules, comparées ligne par ligne</h2>
             <p className="mt-3 max-w-2xl text-muted">

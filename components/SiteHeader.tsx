@@ -28,7 +28,7 @@ export default function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-2">
-          <Link href="/#garanties" className="shrink-0 whitespace-nowrap rounded-full bg-teal px-4 py-2 text-sm font-semibold text-white hover:brightness-110">
+          <Link href="/#comparatif" className="shrink-0 whitespace-nowrap rounded-full bg-teal px-4 py-2 text-sm font-semibold text-white hover:brightness-110">
             <span className="sm:hidden">Formules</span>
             <span className="hidden sm:inline">Comparer les formules</span>
           </Link>
