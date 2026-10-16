@@ -9,8 +9,24 @@ export const EMBEDDING_MODEL = "gemini-embedding-001";
 export const EMBEDDING_DIM = 768; // doit correspondre à vector(768) dans supabase/schema.sql
 
 export class GeminiError extends Error {
+  // Pour un 429 (quota épuisé), Gemini indique dans combien de secondes réessayer
+  public retryAfterSeconds?: number;
+
   constructor(public status: number, details: string) {
     super(`Gemini ${status}: ${details.slice(0, 300)}`);
+    this.retryAfterSeconds = parseRetryDelay(details);
+  }
+}
+
+// Le corps d'une erreur 429 contient un bloc RetryInfo : { "retryDelay": "22007s" }
+export function parseRetryDelay(body: string): number | undefined {
+  try {
+    const details: { "@type"?: string; retryDelay?: string }[] = JSON.parse(body).error?.details ?? [];
+    const delay = details.find((d) => d["@type"]?.endsWith("RetryInfo"))?.retryDelay;
+    const seconds = delay ? parseFloat(delay) : NaN; // "22007.03s" -> 22007.03
+    return Number.isFinite(seconds) ? Math.ceil(seconds) : undefined;
+  } catch {
+    return undefined;
   }
 }
 
@@ -114,6 +130,7 @@ export async function generate(params: {
 // Essaie chaque modèle de GENERATION_MODELS jusqu'à ce que l'un réponde.
 async function callWithFallback(body: unknown): Promise<{ text: string; usage: Usage; model: string }> {
   let lastError: unknown;
+  let soonestRetry: number | undefined; // le premier modèle qui redeviendra disponible
   for (const model of GENERATION_MODELS) {
     try {
       // Une seule relance par modèle : s'il reste saturé, on change de modèle plutôt que d'attendre
@@ -127,8 +144,13 @@ async function callWithFallback(body: unknown): Promise<{ text: string; usage: U
       lastError = err;
       const temporary = err instanceof GeminiError && [429, 503].includes(err.status);
       if (!temporary) throw err;
+      const retry = (err as GeminiError).retryAfterSeconds;
+      if (retry !== undefined) soonestRetry = Math.min(soonestRetry ?? retry, retry);
       console.warn(`[gemini] ${model} indisponible (${(err as GeminiError).status}), modèle suivant`);
     }
+  }
+  if (lastError instanceof GeminiError && soonestRetry !== undefined) {
+    lastError.retryAfterSeconds = soonestRetry;
   }
   throw lastError;
 }

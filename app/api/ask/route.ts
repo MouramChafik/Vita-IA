@@ -35,7 +35,8 @@ export async function POST(request: Request) {
     console.error("[ask] Erreur", message);
     await log({ question, chunkIds: [], durationMs: Date.now() - start, error: message });
     const geminiStatus = err instanceof GeminiError ? err.status : undefined;
-    return Response.json({ error: "La réponse n'a pas pu être générée.", geminiStatus }, { status: 502 });
+    const retryAfterSeconds = err instanceof GeminiError ? err.retryAfterSeconds : undefined;
+    return Response.json({ error: "La réponse n'a pas pu être générée.", geminiStatus, retryAfterSeconds }, { status: 502 });
   }
 }
 

@@ -3,6 +3,7 @@
 // Ce composant tourne dans le navigateur : il appelle notre API /api/ask, jamais Gemini directement.
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { aiUnavailableMessage } from "@/lib/ai-status-message";
 
 type Source = { n: number; title: string; page: number; excerpt: string };
 
@@ -134,9 +135,11 @@ export default function VitaChat({ incomingQuestion, compact = false }: Props) {
       const data = await res.json();
       if (!res.ok) {
         throw new Error(
-          data.geminiStatus === 503
-            ? "Le service IA est très sollicité. Réessayez dans quelques secondes."
-            : (data.error ?? "La réponse n'a pas pu être générée."),
+          aiUnavailableMessage({
+            geminiStatus: data.geminiStatus,
+            retryAfterSeconds: data.retryAfterSeconds,
+            fallback: data.error ?? "La réponse n'a pas pu être générée.",
+          }),
         );
       }
       setMessages((prev) => [...prev, { role: "vita", text: data.answer, sources: data.sources }]);

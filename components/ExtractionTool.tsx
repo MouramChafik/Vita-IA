@@ -2,6 +2,7 @@
 // Choix d'un PDF (document de démo ou fichier personnel) -> appel à /api/extract -> tableau + JSON brut.
 
 import { useState } from "react";
+import { aiUnavailableMessage } from "@/lib/ai-status-message";
 import type { GuaranteeTable } from "@/lib/schemas";
 
 const DEMOS = [
@@ -33,9 +34,11 @@ export default function ExtractionTool() {
       const data = await res.json();
       if (!res.ok) {
         throw new Error(
-          data.geminiStatus === 429
-            ? "Le quota gratuit de l'IA est atteint pour aujourd'hui. Réessayez demain."
-            : (data.error ?? "L'extraction a échoué."),
+          aiUnavailableMessage({
+            geminiStatus: data.geminiStatus,
+            retryAfterSeconds: data.retryAfterSeconds,
+            fallback: data.error ?? "L'extraction a échoué.",
+          }),
         );
       }
       setResult(data);

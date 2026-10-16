@@ -27,6 +27,7 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error("[extract] Erreur", err instanceof Error ? err.message : err);
     const geminiStatus = err instanceof GeminiError ? err.status : undefined;
-    return Response.json({ error: "L'extraction a échoué.", geminiStatus }, { status: 502 });
+    const retryAfterSeconds = err instanceof GeminiError ? err.retryAfterSeconds : undefined;
+    return Response.json({ error: "L'extraction a échoué.", geminiStatus, retryAfterSeconds }, { status: 502 });
   }
 }
