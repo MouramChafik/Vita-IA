@@ -6,9 +6,10 @@
 import { z } from "zod";
 
 export const CATEGORIES = ["soins_courants", "hospitalisation", "optique", "dentaire", "medecine_douce", "autre"] as const;
-export const UNITES = ["% BR", "euros", "euros par an", "euros par jour", "non couvert", "autre"] as const;
+export const UNITES = ["% BR", "euros", "euros par an", "euros par jour", "frais réels", "non couvert", "autre"] as const;
 
 export const GuaranteeSchema = z.object({
+  produit: z.string().min(1).default("Offre"), // gamme ou fiche produit (un PDF peut en contenir plusieurs)
   categorie: z.enum(CATEGORIES),
   soin: z.string().min(1), // ex. "Consultation spécialiste secteur 2 non OPTAM"
   formule: z.string().min(1), // ex. "Équilibre"
@@ -19,6 +20,7 @@ export const GuaranteeSchema = z.object({
 });
 
 export const FormulaSchema = z.object({
+  produit: z.string().min(1).default("Offre"), // ex. "Orvalis Santé Senior"
   nom: z.string().min(1), // ex. "Équilibre"
   cotisation_mensuelle: z.number().nullable(), // en euros, si le document l'indique
 });
@@ -45,10 +47,11 @@ export const GEMINI_GUARANTEE_SCHEMA = {
       items: {
         type: "OBJECT",
         properties: {
+          produit: { type: "STRING" },
           nom: { type: "STRING" },
           cotisation_mensuelle: { type: "NUMBER", nullable: true },
         },
-        required: ["nom", "cotisation_mensuelle"],
+        required: ["produit", "nom", "cotisation_mensuelle"],
       },
     },
     garanties: {
@@ -56,6 +59,7 @@ export const GEMINI_GUARANTEE_SCHEMA = {
       items: {
         type: "OBJECT",
         properties: {
+          produit: { type: "STRING" },
           categorie: { type: "STRING", enum: [...CATEGORIES] },
           soin: { type: "STRING" },
           formule: { type: "STRING" },
@@ -64,8 +68,8 @@ export const GEMINI_GUARANTEE_SCHEMA = {
           conditions: { type: "STRING", nullable: true },
           page: { type: "INTEGER", nullable: true },
         },
-        required: ["categorie", "soin", "formule", "valeur", "unite", "conditions", "page"],
-        propertyOrdering: ["categorie", "soin", "formule", "valeur", "unite", "conditions", "page"],
+        required: ["produit", "categorie", "soin", "formule", "valeur", "unite", "conditions", "page"],
+        propertyOrdering: ["produit", "categorie", "soin", "formule", "valeur", "unite", "conditions", "page"],
       },
     },
   },

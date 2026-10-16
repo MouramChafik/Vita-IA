@@ -1,4 +1,5 @@
 // GET    /api/documents/:id  -> ouvre le PDF (lien temporaire vers Supabase Storage)
+// PATCH  /api/documents/:id  -> relance l'extraction des garanties d'un document publié
 // DELETE /api/documents/:id  -> supprime un document publié depuis la page Extraction
 //
 // Le bucket "documents" est privé : on crée un lien signé valable 10 minutes.
@@ -7,6 +8,8 @@
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { CATALOG_TAG } from "@/lib/catalog";
+import { GeminiError } from "@/lib/gemini";
+import { extractGuarantees } from "@/lib/extract";
 import { supabaseServer } from "@/lib/supabase-server";
 
 const Id = z.uuid();
@@ -51,4 +54,37 @@ export async function DELETE(_request: Request, ctx: RouteContext<"/api/document
 
   revalidateTag(CATALOG_TAG, { expire: 0 });
   return Response.json({ ok: true });
+}
+
+export async function PATCH(_request: Request, ctx: RouteContext<"/api/documents/[id]">) {
+  const { id } = await ctx.params;
+  if (!Id.safeParse(id).success) return Response.json({ error: "Document introuvable." }, { status: 404 });
+
+  const doc = await findDocument(id);
+  if (!doc?.storage_path) return Response.json({ error: "Document introuvable." }, { status: 404 });
+  if (doc.origin !== "extraction") {
+    return Response.json({ error: "Seuls les documents ajoutés depuis l'extraction peuvent être réextraits." }, { status: 403 });
+  }
+
+  const supabase = supabaseServer();
+  const { data: file, error: downloadError } = await supabase.storage.from("documents").download(doc.storage_path);
+  if (downloadError || !file) return Response.json({ error: "PDF introuvable dans le stockage." }, { status: 500 });
+
+  try {
+    const { data, model } = await extractGuarantees(new Uint8Array(await file.arrayBuffer()));
+    const { error } = await supabase.from("documents").update({ extraction: data }).eq("id", id);
+    if (error) throw error;
+    revalidateTag(CATALOG_TAG, { expire: 0 });
+    return Response.json({ ok: true, garanties: data.garanties.length, model });
+  } catch (err) {
+    console.error("[documents] Réextraction", err instanceof Error ? err.message : err);
+    return Response.json(
+      {
+        error: "La réextraction a échoué.",
+        geminiStatus: err instanceof GeminiError ? err.status : undefined,
+        retryAfterSeconds: err instanceof GeminiError ? err.retryAfterSeconds : undefined,
+      },
+      { status: 502 },
+    );
+  }
 }

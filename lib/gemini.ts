@@ -176,7 +176,12 @@ export async function generateJson(params: {
   const { text, usage, model } = await callWithFallback({
     systemInstruction: { parts: [{ text: params.system }] },
     contents: [{ role: "user", parts }],
-    generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: params.schema },
+    generationConfig: {
+      temperature: 0,
+      maxOutputTokens: 16384, // une extraction complète peut produire un long JSON
+      responseMimeType: "application/json",
+      responseSchema: params.schema,
+    },
   });
   return { json: JSON.parse(text), usage, model };
 }

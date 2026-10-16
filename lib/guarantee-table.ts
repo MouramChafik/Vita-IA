@@ -15,20 +15,28 @@ const UNIT: Record<string, string> = {
 
 // 150 + "% BR" -> "150 % BR" ; 1000 + "euros" -> "1 000 €"
 export function formatValue(g: Pick<Guarantee, "valeur" | "unite">): string {
+  if (g.unite === "frais réels") return "Frais réels";
   if (g.valeur === null || g.unite === "non couvert") return "Non couvert";
   const n = g.valeur.toLocaleString("fr-FR").replace(/ /g, " ");
   return `${n} ${UNIT[g.unite] ?? g.unite}`.trim();
 }
 
-export function buildComparison(table: GuaranteeTable): ComparisonTable {
-  const formules = table.formules.map((f) => ({
+// Produits présents, dans l'ordre du document
+export function listProducts(table: GuaranteeTable): string[] {
+  return [...new Set([...table.formules.map((f) => f.produit), ...table.garanties.map((g) => g.produit)])];
+}
+
+// Tableau d'un produit (ou de tout le document si produit n'est pas précisé)
+export function buildComparison(table: GuaranteeTable, produit?: string): ComparisonTable {
+  const same = (p: string) => produit === undefined || p.toLowerCase() === produit.toLowerCase();
+  const formules = table.formules.filter((f) => same(f.produit)).map((f) => ({
     nom: f.nom,
     prix: f.cotisation_mensuelle === null ? null : `${f.cotisation_mensuelle.toLocaleString("fr-FR")} €`,
   }));
 
   // Lignes dans l'ordre d'apparition des soins dans le document
   const rows = new Map<string, TableRow>();
-  for (const g of table.garanties) {
+  for (const g of table.garanties.filter((x) => same(x.produit))) {
     const row = rows.get(g.soin) ?? { categorie: g.categorie, soin: g.soin, detail: g.conditions, valeurs: formules.map(() => "–") };
     const col = formules.findIndex((f) => f.nom.toLowerCase() === g.formule.toLowerCase());
     if (col >= 0) row.valeurs[col] = formatValue(g);

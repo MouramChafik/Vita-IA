@@ -38,3 +38,11 @@ describe("GuaranteeTableSchema", () => {
     expect(GuaranteeTableSchema.safeParse(bad).success).toBe(false);
   });
 });
+
+describe("compatibilité", () => {
+  it("complète produit par défaut pour une ancienne extraction", () => {
+    const old = { ...valid, formules: [{ nom: "Essentielle", cotisation_mensuelle: 29 }] };
+    const r = GuaranteeTableSchema.parse(old);
+    expect(r.formules[0].produit).toBe("Offre");
+  });
+});
