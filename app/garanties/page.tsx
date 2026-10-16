@@ -1,146 +1,51 @@
-// Page /garanties : l'offre de base de Vita Mutuelle, puis les produits publiés depuis la page Extraction.
-// Chaque organisme est présenté avec ses produits ; chaque produit a son tableau formules x garanties.
-// Les documents publiés viennent de Supabase via getPublishedDocuments() (en cache, vidé à chaque publication).
+// Page /garanties : les produits sous forme de cartes, regroupés par organisme.
+// D'abord l'offre de base Vita Mutuelle, puis les documents publiés depuis la page Extraction.
+// Un clic sur une carte ouvre la page détail du produit (/garanties/[offre]/[produit]).
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import DocumentActions from "@/components/DocumentActions";
-import ProductNav from "@/components/ProductNav";
-import ProductTable, { type ProductTableData } from "@/components/ProductTable";
+import OfferHeader from "@/components/OfferHeader";
+import ProductCard from "@/components/ProductCard";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
-import AskVitaButton from "@/components/vita/AskVitaButton";
-import { getPublishedDocuments } from "@/lib/catalog";
-import { buildComparison, groupByCategory, listProducts } from "@/lib/guarantee-table";
-import type { GuaranteeTable } from "@/lib/schemas";
-import { VITA_SOURCE, VITA_TABLE } from "@/lib/vita-catalog";
+import { getOffers } from "@/lib/offers";
 
 export const metadata: Metadata = { title: "Garanties et tarifs · Vita Mutuelle" };
 
-type Offer = {
-  key: string;
-  table: GuaranteeTable;
-  source: { title: string; url: string; pageCount: number | null };
-  base: boolean; // offre de base, toujours présente
-  publishedAt?: string;
-  documentId?: string; // documents publiés : actions Réextraire / Supprimer
-};
-
-const slug = (text: string) =>
-  text
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-
-// Nom court pour la barre de navigation : « Orvalis Santé Jeunes » sous « Mutuelle Orvalis » -> « Santé Jeunes »
-function shortLabel(produit: string, organisme: string): string {
-  const brand = organisme.split(/\s+/).filter((w) => !/^mutuelle$/i.test(w));
-  const words = produit.split(/\s+/);
-  const rest = brand.length && words[0]?.toLowerCase() === brand[0].toLowerCase() ? words.slice(1) : words;
-  return rest.join(" ") || produit;
-}
-
-// Prépare les données (sérialisables) des tableaux de chaque produit
-function productsOf(offer: Offer): (ProductTableData & { anchor: string })[] {
-  return listProducts(offer.table)
-    .map((produit) => {
-      const { formules, rows } = buildComparison(offer.table, produit);
-      return {
-        anchor: `${offer.key}-${slug(produit)}`,
-        organisme: offer.table.organisme,
-        produit,
-        formules,
-        groups: groupByCategory(rows).map((g) => ({ label: g.label, rows: g.rows })),
-      };
-    })
-    .filter((p) => p.groups.length > 0 && p.formules.length > 0);
-}
-
 export default async function GarantiesPage() {
-  const published = await getPublishedDocuments();
-
-  const offers: Offer[] = [
-    { key: "vita", table: VITA_TABLE, source: VITA_SOURCE, base: true },
-    ...published.map((d) => ({
-      key: `doc-${d.id.slice(0, 8)}`,
-      table: d.table,
-      source: { title: d.title, url: `/api/documents/${d.id}`, pageCount: d.pageCount },
-      base: false,
-      publishedAt: d.createdAt,
-      documentId: d.deletable ? d.id : undefined,
-    })),
-  ];
-  const withProducts = offers.map((offer) => ({ offer, products: productsOf(offer) }));
+  const offers = await getOffers();
+  const productCount = offers.reduce((n, o) => n + o.products.length, 0);
 
   return (
     <>
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
-        {/* En-tête compact : le contenu commence tout de suite */}
-        <header className="flex flex-wrap items-end justify-between gap-x-10 gap-y-3 pb-6 pt-10">
-          <h1 className="text-4xl font-bold leading-tight sm:text-5xl">Garanties et tarifs</h1>
+        <header className="flex flex-wrap items-end justify-between gap-x-10 gap-y-3 pb-2 pt-10">
+          <div>
+            <h1 className="text-4xl font-bold leading-tight sm:text-5xl">Garanties et tarifs</h1>
+            <p className="mt-2 text-muted">
+              {productCount} produit{productCount > 1 ? "s" : ""} chez {offers.length} organisme{offers.length > 1 ? "s" : ""}
+            </p>
+          </div>
           <p className="max-w-md text-muted">
-            Comparez les formules soin par soin. Cliquez sur une garantie : Vita explique le calcul et cite la page du document.
+            Choisissez un produit pour voir ses formules, ses tarifs et le détail des remboursements, soin par soin.
           </p>
         </header>
 
-        {/* Navigation entre produits, collante pendant le défilement */}
-        <ProductNav
-          groups={withProducts.map(({ offer, products }) => ({
-            organisme: offer.table.organisme,
-            products: products.map((p) => ({ anchor: p.anchor, label: shortLabel(p.produit, offer.table.organisme) })),
-          }))}
-        />
-
-        {withProducts.map(({ offer, products }) => (
-          <section key={offer.key} aria-labelledby={`${offer.key}-title`} className="mt-12 border-t-2 border-ink pt-8 first-of-type:mt-10">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <p className="text-sm">
-                  {offer.base ? (
-                    <span className="rounded-full bg-teal-soft px-2.5 py-1 font-medium text-teal">Offre de base</span>
-                  ) : (
-                    <span className="rounded-full bg-vita-soft px-2.5 py-1 font-medium text-vita">
-                      Ajouté depuis l&apos;extraction
-                      {offer.publishedAt &&
-                        ` le ${new Date(offer.publishedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}`}
-                    </span>
-                  )}
-                </p>
-                <h2 id={`${offer.key}-title`} className="mt-3 text-3xl font-bold">
-                  {offer.table.organisme}
-                  {offer.table.annee ? <span className="font-medium text-muted"> {offer.table.annee}</span> : null}
-                </h2>
-                <p className="mt-1 text-sm text-muted">
-                  Source :{" "}
-                  <a href={offer.source.url} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-ink">
-                    {offer.source.title}
-                  </a>
-                  {offer.source.pageCount ? `, ${offer.source.pageCount} page${offer.source.pageCount > 1 ? "s" : ""}` : ""}
-                  {products.length > 1 && ` · ${products.length} produits`}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <AskVitaButton
-                  question={`Quelles sont les principales garanties de ${offer.table.organisme} ?`}
-                  className="rounded-full bg-vita px-4 py-2 text-sm font-semibold text-white hover:brightness-110"
-                >
-                  Demander à Vita
-                </AskVitaButton>
-                {offer.documentId && <DocumentActions id={offer.documentId} title={offer.source.title} />}
-              </div>
+        {offers.map((offer) => (
+          <section key={offer.key} aria-label={offer.table.organisme} className="mt-12 border-t-2 border-ink pt-8">
+            <OfferHeader offer={offer} />
+            <div className={`mt-8 grid gap-5 ${offer.products.length > 1 ? "sm:grid-cols-2 lg:grid-cols-3" : ""}`}>
+              {offer.products.map((p) => (
+                <ProductCard
+                  key={p.slug}
+                  offerKey={offer.key}
+                  organisme={offer.table.organisme}
+                  product={p}
+                  wide={offer.products.length === 1}
+                />
+              ))}
             </div>
-
-            {products.map((p) => (
-              <article key={p.anchor} id={p.anchor} className="mt-10 scroll-mt-[130px]">
-                <h3 className="text-xl font-bold">{p.produit}</h3>
-                <div className="mt-4">
-                  <ProductTable data={p} />
-                </div>
-              </article>
-            ))}
           </section>
         ))}
 

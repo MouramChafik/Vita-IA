@@ -31,7 +31,11 @@ export function buildComparison(table: GuaranteeTable, produit?: string): Compar
   const same = (p: string) => produit === undefined || p.toLowerCase() === produit.toLowerCase();
   const formules = table.formules.filter((f) => same(f.produit)).map((f) => ({
     nom: f.nom,
-    prix: f.cotisation_mensuelle === null ? null : `${f.cotisation_mensuelle.toLocaleString("fr-FR")} €`,
+    // 21.9 -> « 21,90 € » ; 29 -> « 29 € »
+    prix:
+      f.cotisation_mensuelle === null
+        ? null
+        : `${f.cotisation_mensuelle.toLocaleString("fr-FR", { minimumFractionDigits: f.cotisation_mensuelle % 1 ? 2 : 0 })} €`,
   }));
 
   // Lignes dans l'ordre d'apparition des soins dans le document

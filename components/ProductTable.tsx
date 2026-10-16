@@ -20,7 +20,8 @@ function Value({ v }: { v: string }) {
   return <span className="font-semibold tabular-nums">{v}</span>;
 }
 
-export default function ProductTable({ data }: { data: ProductTableData }) {
+// stickyTop : hauteur de ce qui reste collé au-dessus (le menu du site fait 61 px)
+export default function ProductTable({ data, stickyTop = 61 }: { data: ProductTableData; stickyTop?: number }) {
   const [selected, setSelected] = useState(Math.min(1, data.formules.length - 1)); // formule du milieu par défaut
   const ask = (soin: string) => `Comment est remboursé le poste « ${soin} » dans le produit ${data.produit} de ${data.organisme} ?`;
 
@@ -71,11 +72,11 @@ export default function ProductTable({ data }: { data: ProductTableData }) {
       <table className="hidden w-full border-separate border-spacing-0 text-left text-sm md:table">
         <thead>
           <tr>
-            <th scope="col" className="sticky top-[118px] z-10 w-[38%] border-b border-line bg-paper/95 px-4 pb-4 pt-5 align-bottom text-xs font-medium text-muted backdrop-blur">
+            <th scope="col" style={{ top: stickyTop }} className="sticky z-10 w-[38%] border-b border-line bg-paper/95 px-4 pb-4 pt-5 align-bottom text-xs font-medium text-muted backdrop-blur">
               Garantie
             </th>
             {data.formules.map((f) => (
-              <th key={f.nom} scope="col" className="sticky top-[118px] z-10 border-b border-line bg-paper/95 px-4 pb-4 pt-5 align-bottom backdrop-blur">
+              <th key={f.nom} scope="col" style={{ top: stickyTop }} className="sticky z-10 border-b border-line bg-paper/95 px-4 pb-4 pt-5 align-bottom backdrop-blur">
                 <span className="block font-[family-name:var(--font-bricolage)] text-lg font-bold">{f.nom}</span>
                 {f.prix ? (
                   <span className="mt-0.5 block text-sm font-normal text-muted">
