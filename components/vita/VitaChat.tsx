@@ -4,16 +4,57 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
+type Source = { n: number; title: string; page: number; excerpt: string };
+
 type Message = {
   role: "user" | "vita";
   text: string;
+  sources?: Source[];
   error?: boolean;
 };
 
+// Remplace les marqueurs [1], [2]... par de petites pastilles numérotées
+function AnswerText({ text }: { text: string }) {
+  const parts = text.split(/(\[\d+\])/g);
+  return (
+    <p className="whitespace-pre-wrap">
+      {parts.map((part, i) => {
+        const m = part.match(/^\[(\d+)\]$/);
+        return m ? (
+          <sup key={i} className="mx-0.5 rounded bg-teal-soft px-1 text-[10px] font-semibold text-teal">
+            {m[1]}
+          </sup>
+        ) : (
+          part
+        );
+      })}
+    </p>
+  );
+}
+
+// Liste des sources citées, chaque extrait se déplie au clic
+function SourceList({ sources }: { sources: Source[] }) {
+  return (
+    <div className="mt-3 space-y-1.5 border-t border-line pt-3">
+      <p className="text-xs font-medium text-muted">Sources</p>
+      {sources.map((s) => (
+        <details key={s.n} className="group rounded-lg bg-teal-soft/50 text-xs">
+          <summary className="flex cursor-pointer list-none items-center gap-2 px-2.5 py-1.5 font-medium text-teal">
+            <span className="grid h-4 w-4 place-items-center rounded bg-teal text-[10px] text-white">{s.n}</span>
+            {s.title}, page {s.page}
+            <span className="ml-auto text-muted group-open:hidden">Voir l&apos;extrait</span>
+          </summary>
+          <p className="px-2.5 pb-2.5 leading-relaxed text-muted">{s.excerpt}</p>
+        </details>
+      ))}
+    </div>
+  );
+}
+
 export const SUGGESTIONS = [
   "Qu'est-ce qu'un ticket modérateur ?",
-  "Comment est remboursée une paire de lunettes ?",
-  "Secteur 1 ou secteur 2 : quelle différence pour moi ?",
+  "Combien pour des lunettes avec la formule Équilibre ?",
+  "L'ostéopathe est-il remboursé ?",
 ];
 
 type Props = {
@@ -55,7 +96,7 @@ export default function VitaChat({ incomingQuestion, compact = false }: Props) {
             : (data.error ?? "La réponse n'a pas pu être générée."),
         );
       }
-      setMessages((prev) => [...prev, { role: "vita", text: data.answer }]);
+      setMessages((prev) => [...prev, { role: "vita", text: data.answer, sources: data.sources }]);
     } catch (err) {
       setMessages((prev) => [...prev, { role: "vita", text: (err as Error).message, error: true }]);
     } finally {
@@ -109,7 +150,8 @@ export default function VitaChat({ incomingQuestion, compact = false }: Props) {
               }`}
             >
               <p className="mb-1 text-xs font-semibold text-vita">Vita</p>
-              <p className="whitespace-pre-wrap">{m.text}</p>
+              <AnswerText text={m.text} />
+              {m.sources && m.sources.length > 0 && <SourceList sources={m.sources} />}
             </div>
           ),
         )}

@@ -1,65 +1,77 @@
-// Route Handler POST /api/ask
-// S'exécute uniquement côté serveur : la clé Gemini ne part jamais au navigateur.
-// Étape 1 : on envoie la question telle quelle à Gemini (pas encore de RAG).
+// Route Handler POST /api/ask : le pipeline RAG complet.
+// question -> embedding -> passages proches (pgvector) -> prompt avec extraits -> Gemini -> réponse + sources
+// S'exécute uniquement côté serveur : les clés Gemini et Supabase ne partent jamais au navigateur.
 
-const GEMINI_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+import { GeminiError, generate } from "@/lib/gemini";
+import { buildPrompt, citedNumbers, NOT_FOUND, SYSTEM_PROMPT } from "@/lib/prompt";
+import { searchPassages } from "@/lib/retrieval";
+import { supabaseServer } from "@/lib/supabase-server";
 
 export async function POST(request: Request) {
-  // 1. Lire et valider le corps de la requête : { "question": "..." }
   const body = await request.json().catch(() => null);
-  const question = typeof body?.question === "string" ? body.question.trim() : "";
+  const question = typeof body?.question === "string" ? body.question.trim().slice(0, 500) : "";
   if (!question) {
     return Response.json({ error: "Le champ 'question' est requis." }, { status: 400 });
   }
 
-  // 2. Lire la clé (définie dans .env.local, sans préfixe NEXT_PUBLIC_)
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return Response.json({ error: "GEMINI_API_KEY manquante côté serveur." }, { status: 500 });
-  }
-
-  // 3. Appeler Gemini. "contents" = l'historique de conversation (ici un seul message).
   const start = Date.now();
-  const requestInit: RequestInit = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-goog-api-key": apiKey, // en en-tête plutôt que dans l'URL : la clé n'apparaît pas dans les logs d'URL
-    },
-    body: JSON.stringify({
-      systemInstruction: {
-        parts: [{ text: "Tu es Vita, l'assistante de Vita Mutuelle (une mutuelle fictive de démonstration). Tu réponds en français, en phrases simples et courtes, aux questions sur l'assurance santé et les remboursements. Écris en texte brut, sans markdown (pas d'astérisques ni de titres). Si tu ne sais pas, dis-le. Ne demande jamais de donnée personnelle ou médicale." }],
-      },
-      contents: [{ role: "user", parts: [{ text: question }] }],
-      generationConfig: { temperature: 0.2 }, // faible = réponses plus stables, moins "créatives"
-    }),
-  };
+  try {
+    // 1. Recherche des passages pertinents
+    const passages = await searchPassages(question);
 
-  // Gemini renvoie parfois 503 (surcharge) ou 429 (quota par minute) : erreurs temporaires.
-  // On réessaie jusqu'à 3 fois en attendant 1 s, puis 2 s, puis 4 s.
-  let geminiResponse = await fetch(GEMINI_URL, requestInit);
-  for (let attempt = 1; attempt <= 3 && [429, 503].includes(geminiResponse.status); attempt++) {
-    await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** (attempt - 1)));
-    geminiResponse = await fetch(GEMINI_URL, requestInit);
+    // 2. Aucun passage assez proche : on ne laisse pas le modèle inventer
+    if (passages.length === 0) {
+      await log({ question, answer: NOT_FOUND, chunkIds: [], durationMs: Date.now() - start });
+      return Response.json({ answer: NOT_FOUND, sources: [] });
+    }
+
+    // 3. Génération à partir des extraits
+    const { text, usage, model } = await generate({ system: SYSTEM_PROMPT, prompt: buildPrompt(question, passages) });
+
+    // 4. Sources : les extraits réellement cités par le modèle, numérotés comme dans la réponse
+    const sources = citedNumbers(text)
+      .filter((n) => n >= 1 && n <= passages.length)
+      .map((n) => {
+        const p = passages[n - 1];
+        return { n, title: p.document_title, page: p.page, excerpt: p.content, similarity: p.similarity };
+      });
+
+    const durationMs = Date.now() - start;
+    await log({ question, answer: text, chunkIds: passages.map((p) => p.id), durationMs, usage, model });
+    console.log("[ask]", { model, durationMs, passages: passages.length, cited: sources.length, tokens: usage.totalTokenCount });
+
+    return Response.json({ answer: text, sources, usage, model });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[ask] Erreur", message);
+    await log({ question, chunkIds: [], durationMs: Date.now() - start, error: message });
+    const geminiStatus = err instanceof GeminiError ? err.status : undefined;
+    return Response.json({ error: "La réponse n'a pas pu être générée.", geminiStatus }, { status: 502 });
   }
+}
 
-  if (!geminiResponse.ok) {
-    const details = await geminiResponse.text();
-    console.error("[ask] Erreur Gemini", geminiResponse.status, details);
-    return Response.json(
-      { error: "Erreur lors de l'appel à Gemini.", geminiStatus: geminiResponse.status },
-      { status: 502 },
-    );
-  }
-
-  // 4. Extraire le texte : la réponse est dans candidates[0].content.parts[].text
-  const data = await geminiResponse.json();
-  const answer: string =
-    data.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "";
-
-  // Premier pas de supervision : durée et tokens consommés
-  console.log("[ask]", { durationMs: Date.now() - start, usage: data.usageMetadata });
-
-  return Response.json({ answer, usage: data.usageMetadata });
+// Journalisation dans query_logs (supervision). Une erreur de log ne doit pas casser la réponse.
+async function log(entry: {
+  question: string;
+  answer?: string;
+  chunkIds: number[];
+  durationMs: number;
+  usage?: { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number };
+  model?: string;
+  error?: string;
+}) {
+  const { error } = await supabaseServer()
+    .from("query_logs")
+    .insert({
+      question: entry.question,
+      answer: entry.answer ?? null,
+      chunk_ids: entry.chunkIds,
+      duration_ms: entry.durationMs,
+      prompt_tokens: entry.usage?.promptTokenCount ?? null,
+      completion_tokens: entry.usage?.candidatesTokenCount ?? null,
+      total_tokens: entry.usage?.totalTokenCount ?? null,
+      model: entry.model ?? null,
+      error: entry.error ?? null,
+    });
+  if (error) console.error("[ask] Log impossible", error.message);
 }
