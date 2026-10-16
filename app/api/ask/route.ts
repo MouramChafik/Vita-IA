@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     },
     body: JSON.stringify({
       systemInstruction: {
-        parts: [{ text: "Tu es un assistant qui répond en français, de façon claire et concise, aux questions sur l'assurance santé." }],
+        parts: [{ text: "Tu es Vita, l'assistante de Vita Mutuelle (une mutuelle fictive de démonstration). Tu réponds en français, en phrases simples et courtes, aux questions sur l'assurance santé et les remboursements. Écris en texte brut, sans markdown (pas d'astérisques ni de titres). Si tu ne sais pas, dis-le. Ne demande jamais de donnée personnelle ou médicale." }],
       },
       contents: [{ role: "user", parts: [{ text: question }] }],
       generationConfig: { temperature: 0.2 }, // faible = réponses plus stables, moins "créatives"
