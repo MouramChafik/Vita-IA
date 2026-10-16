@@ -21,7 +21,7 @@ export async function POST(request: Request) {
 
   // 3. Appeler Gemini. "contents" = l'historique de conversation (ici un seul message).
   const start = Date.now();
-  const geminiResponse = await fetch(GEMINI_URL, {
+  const requestInit: RequestInit = {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -34,12 +34,23 @@ export async function POST(request: Request) {
       contents: [{ role: "user", parts: [{ text: question }] }],
       generationConfig: { temperature: 0.2 }, // faible = réponses plus stables, moins "créatives"
     }),
-  });
+  };
+
+  // Gemini renvoie parfois 503 (surcharge) ou 429 (quota par minute) : erreurs temporaires.
+  // On réessaie jusqu'à 3 fois en attendant 1 s, puis 2 s, puis 4 s.
+  let geminiResponse = await fetch(GEMINI_URL, requestInit);
+  for (let attempt = 1; attempt <= 3 && [429, 503].includes(geminiResponse.status); attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** (attempt - 1)));
+    geminiResponse = await fetch(GEMINI_URL, requestInit);
+  }
 
   if (!geminiResponse.ok) {
     const details = await geminiResponse.text();
     console.error("[ask] Erreur Gemini", geminiResponse.status, details);
-    return Response.json({ error: "Erreur lors de l'appel à Gemini." }, { status: 502 });
+    return Response.json(
+      { error: "Erreur lors de l'appel à Gemini.", geminiStatus: geminiResponse.status },
+      { status: 502 },
+    );
   }
 
   // 4. Extraire le texte : la réponse est dans candidates[0].content.parts[].text
