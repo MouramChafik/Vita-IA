@@ -7,6 +7,7 @@ const NAV = [
   { href: "/assistant", label: "Assistant Vita" },
   { href: "/extraction", label: "Extraction" },
   { href: "/#questions", label: "Questions fréquentes" },
+  { href: "/projet", label: "Le projet" },
 ];
 
 export default function SiteHeader() {
@@ -19,7 +20,7 @@ export default function SiteHeader() {
             Vita <span className="font-medium hidden text-muted sm:inline">Mutuelle</span>
           </span>
         </Link>
-        <nav aria-label="Navigation principale" className="hidden gap-6 text-sm font-medium text-muted md:flex">
+        <nav aria-label="Navigation principale" className="hidden gap-6 whitespace-nowrap text-sm font-medium text-muted lg:flex">
           {NAV.map((item) => (
             <Link key={item.href} href={item.href} className="hover:text-ink">
               {item.label}
@@ -33,7 +34,7 @@ export default function SiteHeader() {
           </Link>
 
           {/* Menu mobile : <details> natif, s'ouvre et se ferme sans JavaScript */}
-          <details className="group relative md:hidden">
+          <details className="group relative lg:hidden">
             <summary
               aria-label="Ouvrir le menu"
               className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-full border border-ink/15"
