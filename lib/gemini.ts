@@ -180,3 +180,75 @@ export async function generateJson(params: {
   });
   return { json: JSON.parse(text), usage, model };
 }
+
+// ---------- Génération en flux (streaming) ----------
+//
+// streamGenerateContent?alt=sse renvoie la réponse morceau par morceau (Server-Sent Events) :
+// des lignes "data: {...}" qui contiennent chacune un bout de texte.
+// On peut ainsi afficher la réponse pendant qu'elle s'écrit.
+
+export type StreamChunk = { text?: string; usage?: Usage; model: string };
+
+export async function* streamGenerate(params: {
+  system: string;
+  prompt: string;
+  history?: Turn[];
+}): AsyncGenerator<StreamChunk> {
+  const previous = (params.history ?? []).map((t) => ({
+    role: t.role === "user" ? "user" : "model",
+    parts: [{ text: t.text }],
+  }));
+  const body = JSON.stringify({
+    systemInstruction: { parts: [{ text: params.system }] },
+    contents: [...previous, { role: "user", parts: [{ text: params.prompt }] }],
+    generationConfig: { temperature: 0.2 },
+  });
+
+  // Choix du modèle : on passe au suivant tant que la réponse est 429 ou 503.
+  // (Une fois le flux commencé, on ne peut plus changer de modèle.)
+  let res: Response | null = null;
+  let model = "";
+  let lastError: GeminiError | null = null;
+  let soonestRetry: number | undefined;
+  for (const candidate of GENERATION_MODELS) {
+    const r = await fetch(`${API}/models/${candidate}:streamGenerateContent?alt=sse`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey() },
+      body,
+    });
+    if (r.ok && r.body) {
+      res = r;
+      model = candidate;
+      break;
+    }
+    const err = new GeminiError(r.status, await r.text());
+    if (![429, 503].includes(r.status)) throw err;
+    console.warn(`[gemini] ${candidate} indisponible (${r.status}), modèle suivant`);
+    lastError = err;
+    if (err.retryAfterSeconds !== undefined) soonestRetry = Math.min(soonestRetry ?? err.retryAfterSeconds, err.retryAfterSeconds);
+  }
+  if (!res?.body) {
+    if (lastError) lastError.retryAfterSeconds = soonestRetry;
+    throw lastError ?? new Error("Aucun modèle disponible");
+  }
+
+  // Lecture du flux SSE : on découpe en lignes, chaque ligne "data: " contient un JSON
+  const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buffer = "";
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += value;
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? ""; // la dernière ligne peut être incomplète
+    for (const line of lines) {
+      if (!line.startsWith("data: ")) continue;
+      const data = JSON.parse(line.slice(6)) as {
+        candidates?: { content?: { parts?: { text?: string }[] } }[];
+        usageMetadata?: Usage;
+      };
+      const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("");
+      yield { text: text || undefined, usage: data.usageMetadata, model };
+    }
+  }
+}

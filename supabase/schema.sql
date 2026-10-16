@@ -43,6 +43,7 @@ create table if not exists public.query_logs (
   total_tokens     int,
   model            text,
   error            text,
+  feedback         smallint check (feedback in (-1, 1)), -- vote 👍 (1) / 👎 (-1)
   created_at       timestamptz not null default now()
 );
 

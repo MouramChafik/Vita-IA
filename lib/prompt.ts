@@ -10,7 +10,10 @@ Règles :
 - Après chaque information, cite l'extrait utilisé avec son numéro entre crochets, par exemple [1] ou [2][3].
 - Si les extraits ne permettent pas de répondre, réponds exactement : "${NOT_FOUND}"
 - Réponds en français, en phrases simples et courtes, en texte brut sans markdown.
-- Ne demande jamais de donnée personnelle ou médicale.`;
+- Ne demande jamais de donnée personnelle ou médicale.
+- Si tu as pu répondre, termine par une dernière ligne au format exact :
+SUIVI: première question courte | deuxième question courte
+avec deux questions que l'adhérent pourrait poser ensuite et auxquelles les extraits permettent de répondre. Pas de ligne SUIVI après le refus.`;
 
 export function buildPrompt(question: string, passages: Passage[]): string {
   const extraits = passages
@@ -23,4 +26,17 @@ export function buildPrompt(question: string, passages: Passage[]): string {
 export function citedNumbers(answer: string): number[] {
   const nums = [...answer.matchAll(/\[(\d+)\]/g)].map((m) => Number(m[1]));
   return [...new Set(nums)].sort((a, b) => a - b);
+}
+
+// Sépare la réponse des questions de relance proposées par le modèle :
+// "Réponse... [1]\nSUIVI: Question A ? | Question B ?" -> { answer, followups }
+export function splitFollowups(text: string): { answer: string; followups: string[] } {
+  const match = text.match(/\n?\s*SUIVI\s*:([\s\S]*)$/);
+  if (!match) return { answer: text.trim(), followups: [] };
+  const followups = match[1]
+    .split("|")
+    .map((q) => q.trim())
+    .filter((q) => q.length > 0)
+    .slice(0, 3);
+  return { answer: text.slice(0, match.index).trim(), followups };
 }

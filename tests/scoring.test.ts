@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { splitFollowups } from "../lib/prompt";
 import { containsAll, inventedNumbers, isRefusal, normalize, numbersIn } from "../eval/scoring";
 
 describe("normalize", () => {
@@ -38,5 +39,21 @@ describe("numbersIn / inventedNumbers", () => {
 
   it("ne confond pas 20 avec 120", () => {
     expect(inventedNumbers("Il y a 20 points.", "Forfait de 120 euros.")).toEqual(["20"]);
+  });
+});
+
+describe("splitFollowups", () => {
+  it("sépare la réponse des questions de relance", () => {
+    expect(splitFollowups("Remboursé à 150 % [1].\nSUIVI: Et avec Sérénité ? | Et pour l'OPTAM ?")).toEqual({
+      answer: "Remboursé à 150 % [1].",
+      followups: ["Et avec Sérénité ?", "Et pour l'OPTAM ?"],
+    });
+  });
+
+  it("laisse la réponse intacte sans ligne SUIVI", () => {
+    expect(splitFollowups("Je ne trouve pas cette information.")).toEqual({
+      answer: "Je ne trouve pas cette information.",
+      followups: [],
+    });
   });
 });
