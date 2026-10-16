@@ -140,7 +140,12 @@ export default function Home() {
                 </tbody>
               </table>
             </div>
-            <p className="mt-3 text-xs text-muted">BR : base de remboursement de la Sécurité sociale. Montants d&apos;exemple.</p>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs text-muted">BR : base de remboursement de la Sécurité sociale. Montants d&apos;exemple.</p>
+              <Link href="/garanties" className="text-sm font-semibold text-teal underline underline-offset-4 hover:no-underline">
+                Voir toutes les garanties et les autres offres
+              </Link>
+            </div>
           </div>
         </section>
 

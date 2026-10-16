@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildComparison, formatValue, groupByCategory, listProducts } from "../lib/guarantee-table";
-import type { GuaranteeTable } from "../lib/schemas";
+import { GuaranteeTableSchema, type GuaranteeTable } from "../lib/schemas";
+import { VITA_TABLE } from "../lib/vita-catalog";
 
 describe("formatValue", () => {
   it("formate pourcentages, montants et non couvert", () => {
@@ -67,5 +68,18 @@ describe("produits", () => {
     const senior = buildComparison(table, "Senior");
     expect(senior.formules.map((f) => f.nom)).toEqual(["Senior"]);
     expect(senior.rows.map((r) => r.valeurs)).toEqual([["250 €"]]);
+  });
+});
+
+describe("catalogue de base Vita Mutuelle", () => {
+  it("respecte le schéma des extractions", () => {
+    expect(GuaranteeTableSchema.safeParse(VITA_TABLE).success).toBe(true);
+  });
+
+  it("donne une ligne complète par soin pour les 3 formules", () => {
+    const { formules, rows } = buildComparison(VITA_TABLE, "Vita Santé");
+    expect(formules.map((f) => f.prix)).toEqual(["29 €", "48 €", "74 €"]);
+    expect(rows.find((r) => r.soin === "Chambre particulière")?.valeurs).toEqual(["Non couvert", "40 € / jour", "70 € / jour"]);
+    expect(rows.find((r) => r.soin === "Lunettes 100 % Santé")?.valeurs).toEqual(["Frais réels", "Frais réels", "Frais réels"]);
   });
 });
