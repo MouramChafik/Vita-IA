@@ -2,16 +2,29 @@
 // S'exécute uniquement côté serveur : les clés Gemini et Supabase ne partent jamais au navigateur.
 //
 // Format de la réponse : NDJSON (un objet JSON par ligne), lu au fur et à mesure par le navigateur :
+//   {"type":"status","step":"profile"}     Vita analyse la situation (mode orientation)
 //   {"type":"status","step":"search"}      Vita cherche dans les documents
 //   {"type":"status","step":"write"}       Vita rédige
 //   {"type":"delta","text":"..."}          un morceau de texte
-//   {"type":"done", answer, sources, followups, logId, model}
+//   {"type":"done", answer, sources, followups, logId, model, quickReplies?, suggestions?}
 //   {"type":"error", error, geminiStatus, retryAfterSeconds}
 
 import { z } from "zod";
 import { GeminiError, streamGenerate, type Usage } from "@/lib/gemini";
-import { NOT_FOUND } from "@/lib/prompt";
+import { getOffers, productHref } from "@/lib/offers";
+import {
+  describeProfile,
+  describeSuggestions,
+  extractProfile,
+  isOrientationRequest,
+  ORIENTATION_MARKER,
+  ORIENTATION_SYSTEM,
+  questionsFor,
+  suggest,
+} from "@/lib/orientation";
+import { buildPrompt, NOT_FOUND } from "@/lib/prompt";
 import { finalize, generationInput, retrieve } from "@/lib/rag";
+import { searchPassages, type Passage } from "@/lib/retrieval";
 import { supabaseServer } from "@/lib/supabase-server";
 
 // Validation du corps de la requête avec Zod : on ne fait jamais confiance au navigateur
@@ -37,6 +50,13 @@ export async function POST(request: Request) {
       const start = Date.now();
 
       try {
+        // Mode orientation : demande de proposition, ou réponse à une question d'orientation de Vita
+        const lastVita = [...history].reverse().find((t) => t.role === "vita")?.text ?? "";
+        if (isOrientationRequest(question) || lastVita.includes(ORIENTATION_MARKER)) {
+          await orient({ question, history, send, start });
+          return;
+        }
+
         // 1. Recherche
         send({ type: "status", step: "search" });
         const passages = await retrieve(question, history);
@@ -86,6 +106,85 @@ export async function POST(request: Request) {
 
   return new Response(stream, {
     headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-cache" },
+  });
+}
+
+// ---------- Mode orientation ----------
+// 1. profil (LLM + Zod)  2. questions s'il manque l'essentiel  3. pistes (règles)  4. explication sourcée (LLM)
+async function orient(ctx: {
+  question: string;
+  history: { role: "user" | "vita"; text: string }[];
+  send: (event: object) => void;
+  start: number;
+}) {
+  const { question, history, send, start } = ctx;
+
+  send({ type: "status", step: "profile" });
+  const profile = await extractProfile(history, question);
+
+  // On ne pose les questions qu'une fois : ensuite on oriente avec ce qu'on sait
+  const alreadyAsked = history.some((t) => t.role === "vita" && t.text.includes(ORIENTATION_MARKER));
+  const questions = questionsFor(profile);
+  if (questions.length > 0 && !alreadyAsked) {
+    const answer = `${ORIENTATION_MARKER}, j'ai besoin de quelques précisions.\n\n${questions.map((q) => `- ${q.text}`).join("\n")}`;
+    const logId = await log({ question, answer, chunkIds: [], durationMs: Date.now() - start });
+    send({ type: "done", answer, sources: [], followups: [], logId, quickReplies: questions.flatMap((q) => q.quickReplies) });
+    return;
+  }
+
+  const suggestions = suggest(profile, await getOffers());
+  if (suggestions.length === 0) {
+    const answer = "Je n'ai pas trouvé de formule correspondant à cette situation dans les offres disponibles. Un conseiller pourra vous aider.";
+    const logId = await log({ question, answer, chunkIds: [], durationMs: Date.now() - start });
+    send({ type: "done", answer, sources: [], followups: [], logId });
+    return;
+  }
+
+  // Extraits des documents pour chaque piste, afin que l'explication soit sourcée
+  send({ type: "status", step: "search" });
+  const passages: Passage[] = [];
+  for (const s of suggestions) {
+    for (const p of await searchPassages(`${s.productName} ${s.formule ?? ""} garanties remboursements`, 2, 0.4)) {
+      if (!passages.some((x) => x.id === p.id)) passages.push(p);
+    }
+  }
+
+  send({ type: "status", step: "write" });
+  const prompt = `${describeProfile(profile)}\n\nPistes sélectionnées :\n${describeSuggestions(suggestions)}\n\n${buildPrompt(
+    "Présente ces pistes à l'adhérent.",
+    passages,
+  )}`;
+  let text = "";
+  let usage: Usage | undefined;
+  let model: string | undefined;
+  for await (const chunk of streamGenerate({ system: ORIENTATION_SYSTEM, prompt })) {
+    model = chunk.model;
+    if (chunk.usage) usage = chunk.usage;
+    if (chunk.text) {
+      text += chunk.text;
+      send({ type: "delta", text: chunk.text });
+    }
+  }
+
+  const { answer, sources } = finalize(text, passages);
+  const logId = await log({ question, answer, chunkIds: passages.map((p) => p.id), durationMs: Date.now() - start, usage, model });
+  send({
+    type: "done",
+    answer,
+    sources,
+    followups: [],
+    logId,
+    model,
+    // Cartes cliquables vers les produits proposés
+    suggestions: suggestions.map((s) => ({
+      href: productHref(s.offerKey, s.productSlug),
+      organisme: s.organisme,
+      productName: s.productName,
+      formule: s.formule,
+      prix: s.prix,
+      kind: s.kind,
+      raisons: s.raisons,
+    })),
   });
 }
 

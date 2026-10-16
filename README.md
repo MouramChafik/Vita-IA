@@ -48,6 +48,17 @@ flowchart LR
 4. **Génération** (`lib/prompt.ts`, `lib/rag.ts`) : les passages sont numérotés `[1]`, `[2]`… dans le prompt. Le modèle doit répondre uniquement à partir de ces extraits et citer leurs numéros. Les citations sont ensuite reliées au document et à la page.
 5. **Journalisation** : chaque question est enregistrée dans `query_logs` (réponse, passages utilisés, durée, tokens, modèle, erreur).
 
+### Orientation vers une formule
+
+Quand l'utilisateur demande une proposition (« je suis marié avec deux enfants, mon épouse est infirmière libérale de 47 ans, quelle offre nous conviendrait ? »), Vita passe en mode orientation (`lib/orientation.ts`) :
+
+1. **Profil** : Gemini transforme la conversation en profil structuré (foyer, âges, statuts, besoins, budget), validé par Zod. Une profession libérale devient « indépendant ».
+2. **Questions** : s'il manque les besoins ou le budget, Vita pose une ou deux questions, avec des réponses en un clic.
+3. **Pistes** : des règles déterministes notent chaque formule à partir des garanties et tarifs structurés (besoins du foyer, budget, produits réservés à un âge) et ajoutent la prévoyance adaptée (revenus pour un indépendant, décès avec des enfants à charge).
+4. **Explication** : Vita présente les pistes en citant les documents, avec des cartes vers les pages produit, et rappelle qu'il s'agit d'une orientation, pas d'un conseil.
+
+Le LLM lit et explique, mais ne choisit pas : le classement est reproductible et testé.
+
 ### Extraction structurée
 
 `/api/extract` envoie le PDF directement à Gemini (`inline_data`), avec `responseMimeType: "application/json"` et un `responseSchema`. Le JSON reçu est revalidé avec **Zod** (`lib/schemas.ts`) : une catégorie inconnue, un montant écrit en texte ou un champ manquant sont rejetés.

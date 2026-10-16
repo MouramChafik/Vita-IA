@@ -8,19 +8,33 @@ import { aiUnavailableMessage } from "@/lib/ai-status-message";
 
 type Source = { n: number; title: string; page: number; excerpt: string; url: string | null };
 
+// Piste proposée par le mode orientation (calculée par des règles, expliquée par Vita)
+type Suggestion = {
+  href: string;
+  organisme: string;
+  productName: string;
+  formule: string | null;
+  prix: string | null;
+  kind: "sante" | "prevoyance";
+  raisons: string[];
+};
+
 type Message = {
   role: "user" | "vita";
   text: string;
   at: string; // date ISO, pour afficher l'heure
   sources?: Source[];
   followups?: string[];
+  quickReplies?: string[]; // réponses en un clic aux questions d'orientation
+  suggestions?: Suggestion[];
   logId?: number | null; // ligne de query_logs, pour le vote
   feedback?: 1 | -1 | null;
-  status?: "search" | "write" | "done";
+  status?: "profile" | "search" | "write" | "done";
   error?: boolean;
 };
 
 export const SUGGESTIONS = [
+  "Quelle formule me conseillez-vous pour ma famille ?",
   "Qu'est-ce qu'un ticket modérateur ?",
   "Combien pour des lunettes avec la formule Équilibre ?",
   "L'ostéopathe est-il remboursé ?",
@@ -112,7 +126,39 @@ function SourceList({ sources, openN, idPrefix }: { sources: Source[]; openN: nu
   );
 }
 
-function StatusLine({ status }: { status: "search" | "write" }) {
+const STATUS_TEXT = {
+  profile: "Vita analyse votre situation…",
+  search: "Vita cherche dans les documents…",
+  write: "Vita rédige sa réponse…",
+};
+
+// Cartes des pistes proposées : santé d'abord, puis prévoyance
+function SuggestionCards({ suggestions }: { suggestions: Suggestion[] }) {
+  return (
+    <div className="mt-3 space-y-2 border-t border-line pt-3">
+      <p className="text-xs font-medium text-muted">Pistes à étudier</p>
+      {suggestions.map((s) => (
+        <a key={s.href + (s.formule ?? "")} href={s.href} className="block rounded-xl border border-line bg-paper/60 p-3 hover:border-teal">
+          <span className="flex items-start justify-between gap-3">
+            <span className="min-w-0">
+              <span className={`text-[10px] font-semibold ${s.kind === "sante" ? "text-teal" : "text-vita"}`}>
+                {s.kind === "sante" ? "Santé" : "Prévoyance"} · {s.organisme}
+              </span>
+              <span className="block text-sm font-semibold">
+                {s.productName}
+                {s.formule ? ` · ${s.formule}` : ""}
+              </span>
+            </span>
+            {s.prix && <span className="shrink-0 text-sm font-semibold tabular-nums">{s.prix}</span>}
+          </span>
+          {s.raisons[0] && <span className="mt-1 block text-xs text-muted">{s.raisons[0]}</span>}
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function StatusLine({ status }: { status: "profile" | "search" | "write" }) {
   return (
     <p className="flex items-center gap-2 text-xs text-muted">
       <span className="flex gap-1" aria-hidden="true">
@@ -120,7 +166,7 @@ function StatusLine({ status }: { status: "search" | "write" }) {
         <span className="wait-dot h-1.5 w-1.5 rounded-full bg-vita" />
         <span className="wait-dot h-1.5 w-1.5 rounded-full bg-vita" />
       </span>
-      {status === "search" ? "Vita cherche dans les documents…" : "Vita rédige sa réponse…"}
+      {STATUS_TEXT[status]}
     </p>
   );
 }
@@ -241,6 +287,8 @@ export default function VitaChat({ incomingQuestion, compact = false }: Props) {
               text: event.answer,
               sources: event.sources,
               followups: event.followups,
+              quickReplies: event.quickReplies,
+              suggestions: event.suggestions,
               logId: event.logId,
               at: new Date().toISOString(),
               status: "done",
@@ -354,6 +402,7 @@ export default function VitaChat({ incomingQuestion, compact = false }: Props) {
                 ) : (
                   m.status && m.status !== "done" && <StatusLine status={m.status} />
                 )}
+                {m.suggestions && m.suggestions.length > 0 && <SuggestionCards suggestions={m.suggestions} />}
                 {m.sources && m.sources.length > 0 && (
                   <SourceList
                     sources={m.sources}
@@ -393,6 +442,21 @@ export default function VitaChat({ incomingQuestion, compact = false }: Props) {
                       </IconButton>
                     </>
                   )}
+                </div>
+              )}
+
+              {/* Réponses en un clic aux questions d'orientation, sous la dernière réponse */}
+              {i === last && !loading && m.quickReplies && m.quickReplies.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {m.quickReplies.map((q) => (
+                    <button
+                      key={q}
+                      onClick={() => ask(q)}
+                      className="rounded-full border border-vita/30 bg-white px-3 py-1.5 text-xs font-medium text-vita hover:bg-vita-soft"
+                    >
+                      {q}
+                    </button>
+                  ))}
                 </div>
               )}
 
