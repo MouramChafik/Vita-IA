@@ -1,0 +1,214 @@
+{
+  "date": "2026-10-17T19:32:35.990Z",
+  "mode": "full",
+  "scores": {
+    "retrieval": 100,
+    "citation": 100,
+    "answer": 100,
+    "grounded": 100
+  },
+  "rows": [
+    {
+      "id": "cotisation-equilibre",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "ticket-moderateur",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "participation-forfaitaire",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "plafond-non-optam",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "generaliste",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "specialiste-essentielle",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "specialiste-serenite-optam",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "exemple-dermatologue",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "pharmacie",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "lunettes-equilibre",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "monture",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "renouvellement-adulte",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "renouvellement-enfant",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "couronne-serenite",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "orthodontie-equilibre",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "cent-pour-cent-sante",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "chambre-equilibre",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "chambre-limite",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "osteo-serenite",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "delai-attente",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "delai-remboursement",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "delai-demande",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "auditif-classe-1",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "auditif-equilibre",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "monture-classe-a",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "panachage",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "hors-sujet-meteo",
+      "grounded": true,
+      "answer": true
+    },
+    {
+      "id": "hors-doc-resiliation",
+      "grounded": true,
+      "answer": true
+    },
+    {
+      "id": "hors-doc-obseques",
+      "grounded": true,
+      "answer": true
+    },
+    {
+      "id": "hors-doc-telephone",
+      "grounded": true,
+      "answer": true
+    }
+  ]
+}

@@ -136,10 +136,16 @@ npm run eval -- --save-baseline     # enregistre le résultat comme référence
 
 Le script compare les scores à `eval/baseline.json` et échoue si une métrique baisse de plus de 5 points. On peut donc modifier le découpage, le prompt ou le modèle et voir tout de suite si la qualité régresse.
 
-**Résultats actuels**
+**Résultats de référence** (`eval/baseline.json`, 30 questions, `gemini-2.5-flash`)
 
-- Recherche : **100 %** sur les 25 questions qui ont une réponse dans les documents.
-- Évaluation complète : en attente d'une exécution complète. Le quota gratuit de Gemini est limité à quelques dizaines de requêtes par jour. Sur une première exécution partielle (13 questions), toutes les réponses étaient justes et sans invention.
+| Métrique | Score |
+| --- | --- |
+| Recherche (bonne page retrouvée) | 100 % |
+| Citation (bonne page citée) | 100 % |
+| Réponse correcte | 100 % |
+| Sans invention | 100 % |
+
+Les 4 questions hors documents (météo, résiliation, obsèques, téléphone) sont bien refusées. Ce score sert de référence : toute modification qui le fait baisser de plus de 5 points est signalée.
 
 ## Lancer le projet
 
