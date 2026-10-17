@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { themeFor } from "../components/ProductImage";
+import { assignPhotos, PHOTOS, themeFor } from "../lib/photos";
 import { formatPrice, productsOf, shortName, slugify } from "../lib/offers";
 import { VITA_TABLE } from "../lib/vita-catalog";
 
@@ -30,5 +30,25 @@ describe("offres", () => {
     expect(themeFor("Orvalis Santé Senior")).toBe("senior");
     expect(themeFor("Orvalis Prévoyance Décès")).toBe("deces");
     expect(themeFor("Vita Santé")).toBe("sante");
+  });
+});
+
+describe("photos", () => {
+  it("déduit le thème des garanties quand le nom est générique", () => {
+    expect(themeFor("Pack Confort", ["autre"], ["Indemnités journalières", "Rente d'invalidité"])).toBe("revenus");
+    expect(themeFor("Formule Zen", ["autre"], ["Capital décès", "Rente éducation"])).toBe("deces");
+  });
+
+  it("ne réutilise pas une photo tant qu'il en reste dans le thème", () => {
+    const items = Array.from({ length: 5 }, (_, i) => ({ key: `p${i}`, theme: "sante" as const }));
+    const photos = assignPhotos(items);
+    expect(new Set([...photos.values()].map((p) => p.src)).size).toBe(5);
+  });
+
+  it("dispose d'au moins 5 photos par thème, toutes créditées", () => {
+    for (const list of Object.values(PHOTOS)) {
+      expect(list.length).toBeGreaterThanOrEqual(5);
+      for (const p of list) expect(p.author && p.page.startsWith("https://unsplash.com/photos/")).toBeTruthy();
+    }
   });
 });

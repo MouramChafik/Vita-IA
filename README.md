@@ -199,7 +199,7 @@ tests/                     tests Vitest
 
 ## Crédits photos
 
-Les photos des produits sont libres de droits ([licence Unsplash](https://unsplash.com/license)) : National Cancer Institute, Eliott Reyna, Hector Reyes, Ryno Marais, Mike Scheid, Age Cymru, David Travis, SoyBreno, Online Marketing, Simon Maage, Sven Mieke, Bob van Aubel, Kevin Delvecchio, Matt Bennett, Harpreet Singh et Harold Hisona. Chaque page produit crédite sa photo.
+Les photos des produits sont libres de droits ([licence Unsplash](https://unsplash.com/license), gratuite, usage commercial autorisé), licence vérifiée photo par photo. Le stock (5 photos par thème) et le nom de chaque photographe sont dans `lib/photos.ts`, et chaque page produit crédite sa photo. Chaque produit reçoit une photo de son thème pas encore utilisée sur la page : pas de doublon tant que le stock suffit.
 
 ## Stack
 
