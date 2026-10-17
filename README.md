@@ -40,7 +40,7 @@ Question → vecteur → recherche des passages les plus proches → l'IA répon
 **Les garde-fous de fiabilité :**
 - l'IA ne peut répondre qu'à partir des extraits fournis, et doit les citer ;
 - pour l'orientation, ce sont **des règles transparentes** qui choisissent les pistes, l'IA ne fait que les expliquer ;
-- **un jeu de 30 questions de référence** mesure automatiquement si la bonne source est trouvée, si la réponse est juste et si rien n'est inventé, pour détecter toute régression ;
+- **un jeu de 34 questions de référence** mesure automatiquement si la bonne source est trouvée, si la réponse est juste et si rien n'est inventé, pour détecter toute régression ;
 - **chaque requête est journalisée** : temps de réponse, coût en tokens, erreurs, avis des utilisateurs.
 
 Le détail technique de chaque brique suit ci-dessous.
@@ -119,7 +119,7 @@ npm test
 
 ### Jeu d'évaluation
 
-`eval/questions.json` contient **34 questions de référence** sur les 4 documents. Chacune donne les sources attendues (document et page) et les informations que la réponse doit contenir. 5 questions portent sur des sujets absents des documents : Vita doit refuser d'y répondre.
+`eval/questions.json` contient **34 questions de référence** sur les 4 documents. Chacune donne les sources attendues (document et page) et les informations que la réponse doit contenir. 4 questions portent sur des sujets absents des documents : Vita doit refuser d'y répondre.
 
 ```bash
 npm run eval                        # évaluation complète

@@ -76,7 +76,7 @@ const FEATURES: { name: string; href: string | null; ask?: string; cta: string; 
 const SAFEGUARDS = [
   { title: "Réponses fondées", text: "Le modèle ne reçoit que les extraits retrouvés et doit les citer. Sans extrait pertinent, il n'est pas appelé." },
   { title: "Décision par des règles", text: "Pour l'orientation, des règles écrites et testées choisissent ; l'IA explique. On peut justifier chaque proposition." },
-  { title: "Évaluation automatique", text: "30 questions de référence mesurent la bonne source, la bonne réponse et l'absence d'invention, et signalent toute baisse de score." },
+  { title: "Évaluation automatique", text: "34 questions de référence mesurent la bonne source, la bonne réponse et l'absence d'invention, et signalent toute baisse de score." },
   { title: "Secrets protégés", text: "Les clés d'API ne quittent jamais le serveur ; la base n'est accessible qu'aux fonctions serveur." },
 ];
 
