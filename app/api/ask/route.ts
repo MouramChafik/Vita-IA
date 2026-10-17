@@ -22,7 +22,8 @@ import {
   questionsFor,
   suggest,
 } from "@/lib/orientation";
-import { buildPrompt, NOT_FOUND } from "@/lib/prompt";
+import { buildPrompt } from "@/lib/prompt";
+import { helpfulRefusal, isRefusal } from "@/lib/refusal";
 import { finalize, generationInput, retrieve } from "@/lib/rag";
 import { searchPassages, type Passage } from "@/lib/retrieval";
 import { supabaseServer } from "@/lib/supabase-server";
@@ -63,8 +64,9 @@ export async function POST(request: Request) {
 
         // 2. Rien de pertinent : refus, sans appeler le modèle
         if (passages.length === 0) {
-          const logId = await log({ question, answer: NOT_FOUND, chunkIds: [], durationMs: Date.now() - start });
-          send({ type: "done", answer: NOT_FOUND, sources: [], followups: [], logId });
+          const refusal = helpfulRefusal(question);
+          const logId = await log({ question, answer: refusal.answer, chunkIds: [], durationMs: Date.now() - start });
+          send({ type: "done", answer: refusal.answer, sources: [], followups: [], quickReplies: refusal.quickReplies, logId });
           return;
         }
 
@@ -83,11 +85,16 @@ export async function POST(request: Request) {
         }
 
         // 4. Réponse finale : relances séparées, sources reliées aux documents
-        const { answer, followups, sources } = finalize(text, passages);
+        const final = finalize(text, passages);
+        // Le modèle a refusé (information absente des extraits) : on complète par un refus utile
+        const refusal = isRefusal(final.answer) ? helpfulRefusal(question) : null;
+        const answer = refusal?.answer ?? final.answer;
+        const sources = refusal ? [] : final.sources;
+        const followups = refusal ? [] : final.followups;
         const durationMs = Date.now() - start;
         const logId = await log({ question, answer, chunkIds: passages.map((p) => p.id), durationMs, usage, model });
         console.log("[ask]", { model, durationMs, passages: passages.length, cited: sources.length, tokens: usage?.totalTokenCount });
-        send({ type: "done", answer, sources, followups, logId, model });
+        send({ type: "done", answer, sources, followups, quickReplies: refusal?.quickReplies, logId, model });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         console.error("[ask] Erreur", message);

@@ -28,8 +28,9 @@
   {"id": "gamme-jeunes-prix", "question": "Combien coûte la formule Jeunes Actif de Vita Santé Jeunes ?", "expected_sources": [{"document": "Gamme Vita 2026", "page": 2}], "must_contain": ["24"]},
   {"id": "gamme-senior-cure", "question": "Quel remboursement pour une cure thermale avec Vita Santé Senior formule Senior Intégral ?", "expected_sources": [{"document": "Gamme Vita 2026", "page": 3}], "must_contain": ["250"]},
   {"id": "gamme-independants-ij", "question": "Combien d'indemnités journalières verse Vita Prévoyance Indépendants en formule Revenus Confort ?", "expected_sources": [{"document": "Gamme Vita 2026", "page": 4}], "must_contain": ["80"]},
+  {"id": "gamme-obseques", "question": "Vita Mutuelle propose-t-elle une garantie obsèques ?", "expected_sources": [{"document": "Gamme Vita 2026", "page": 5}], "must_contain": ["obsèques"]},
   {"id": "hors-sujet-meteo", "question": "Quel temps fera-t-il demain à Rennes ?", "expected_sources": [], "must_contain": []},
   {"id": "hors-doc-resiliation", "question": "Comment résilier mon contrat Vita Mutuelle ?", "expected_sources": [], "must_contain": []},
-  {"id": "hors-doc-obseques", "question": "Vita Mutuelle propose-t-elle une garantie obsèques ?", "expected_sources": [], "must_contain": []},
-  {"id": "hors-doc-telephone", "question": "Quel est le numéro de téléphone du service client ?", "expected_sources": [], "must_contain": []}
+  {"id": "hors-doc-telephone", "question": "Quel est le numéro de téléphone du service client ?", "expected_sources": [], "must_contain": []},
+  {"id": "hors-doc-veterinaire", "question": "Vita Mutuelle rembourse-t-elle les frais vétérinaires de mon chien ?", "expected_sources": [], "must_contain": []}
 ]
