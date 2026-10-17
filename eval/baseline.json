@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-17T19:32:35.990Z",
+  "date": "2026-10-17T21:32:01.904Z",
   "mode": "full",
   "scores": {
     "retrieval": 100,
@@ -191,6 +191,34 @@
       "answer": true
     },
     {
+      "id": "gamme-jeunes-prix",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "gamme-senior-cure",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "gamme-independants-ij",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
+      "id": "gamme-obseques",
+      "grounded": true,
+      "retrieval": true,
+      "citation": true,
+      "answer": true
+    },
+    {
       "id": "hors-sujet-meteo",
       "grounded": true,
       "answer": true
@@ -201,12 +229,12 @@
       "answer": true
     },
     {
-      "id": "hors-doc-obseques",
+      "id": "hors-doc-telephone",
       "grounded": true,
       "answer": true
     },
     {
-      "id": "hors-doc-telephone",
+      "id": "hors-doc-veterinaire",
       "grounded": true,
       "answer": true
     }

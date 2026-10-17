@@ -119,7 +119,7 @@ npm test
 
 ### Jeu d'évaluation
 
-`eval/questions.json` contient **30 questions de référence** sur les 3 documents. Chacune donne les sources attendues (document et page) et les informations que la réponse doit contenir. 5 questions portent sur des sujets absents des documents : Vita doit refuser d'y répondre.
+`eval/questions.json` contient **34 questions de référence** sur les 4 documents. Chacune donne les sources attendues (document et page) et les informations que la réponse doit contenir. 5 questions portent sur des sujets absents des documents : Vita doit refuser d'y répondre.
 
 ```bash
 npm run eval                        # évaluation complète
@@ -136,7 +136,7 @@ npm run eval -- --save-baseline     # enregistre le résultat comme référence
 
 Le script compare les scores à `eval/baseline.json` et échoue si une métrique baisse de plus de 5 points. On peut donc modifier le découpage, le prompt ou le modèle et voir tout de suite si la qualité régresse.
 
-**Résultats de référence** (`eval/baseline.json`, 30 questions, `gemini-2.5-flash`)
+**Résultats de référence** (`eval/baseline.json`, 34 questions sur 4 documents)
 
 | Métrique | Score |
 | --- | --- |
@@ -145,7 +145,7 @@ Le script compare les scores à `eval/baseline.json` et échoue si une métrique
 | Réponse correcte | 100 % |
 | Sans invention | 100 % |
 
-Les 4 questions hors documents (météo, résiliation, obsèques, téléphone) sont bien refusées. Ce score sert de référence : toute modification qui le fait baisser de plus de 5 points est signalée.
+Les 4 questions hors documents (météo, résiliation, téléphone, frais vétérinaires) sont bien refusées. Ce score sert de référence : toute modification qui le fait baisser de plus de 5 points est signalée.
 
 ## Lancer le projet
 
