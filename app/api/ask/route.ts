@@ -133,9 +133,9 @@ async function orient(ctx: {
   const alreadyAsked = history.some((t) => t.role === "vita" && t.text.includes(ORIENTATION_MARKER));
   const questions = questionsFor(profile);
   if (questions.length > 0 && !alreadyAsked) {
-    const answer = `${ORIENTATION_MARKER}, j'ai besoin de quelques précisions.\n\n${questions.map((q) => `- ${q.text}`).join("\n")}`;
+    const answer = `${ORIENTATION_MARKER}, j'ai besoin de quelques précisions : ${questions.map((q) => q.text.toLowerCase().replace(/ \?$/, "")).join(" ; ")}.`;
     const logId = await log({ question, answer, chunkIds: [], durationMs: Date.now() - start });
-    send({ type: "done", answer, sources: [], followups: [], logId, quickReplies: questions.flatMap((q) => q.quickReplies) });
+    send({ type: "done", answer, sources: [], followups: [], logId, questions }); // affichées en formulaire
     return;
   }
 

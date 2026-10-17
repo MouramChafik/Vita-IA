@@ -8,6 +8,9 @@ import { aiUnavailableMessage } from "@/lib/ai-status-message";
 
 type Source = { n: number; title: string; page: number; excerpt: string; url: string | null };
 
+// Question d'orientation : choix unique (budget) ou multiple (soins)
+type Question = { id: string; text: string; label: string; multiple: boolean; options: string[] };
+
 // Piste proposée par le mode orientation (calculée par des règles, expliquée par Vita)
 type Suggestion = {
   href: string;
@@ -25,7 +28,8 @@ type Message = {
   at: string; // date ISO, pour afficher l'heure
   sources?: Source[];
   followups?: string[];
-  quickReplies?: string[]; // réponses en un clic aux questions d'orientation
+  quickReplies?: string[]; // réponses en un clic (refus utile)
+  questions?: Question[]; // questions d'orientation, affichées en formulaire
   suggestions?: Suggestion[];
   logId?: number | null; // ligne de query_logs, pour le vote
   feedback?: 1 | -1 | null;
@@ -155,6 +159,79 @@ function SuggestionCards({ suggestions }: { suggestions: Suggestion[] }) {
         </a>
       ))}
     </div>
+  );
+}
+
+// Formulaire des questions d'orientation : on coche, puis on valide en une fois.
+// La réponse envoyée est une phrase lisible, que Vita retransforme en profil.
+function QuestionForm({ questions, onSubmit }: { questions: Question[]; onSubmit: (text: string) => void }) {
+  const [picked, setPicked] = useState<Record<string, string[]>>({});
+
+  function toggle(q: Question, option: string) {
+    setPicked((prev) => {
+      const current = prev[q.id] ?? [];
+      const next = q.multiple
+        ? current.includes(option)
+          ? current.filter((o) => o !== option)
+          : [...current, option]
+        : current[0] === option
+          ? []
+          : [option];
+      return { ...prev, [q.id]: next };
+    });
+  }
+
+  const answered = questions.filter((q) => (picked[q.id] ?? []).length > 0);
+  const text = answered.map((q) => `${q.label} : ${picked[q.id].join(", ")}`).join(". ");
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (answered.length) onSubmit(text + ".");
+      }}
+      className="mt-2 space-y-3 rounded-2xl border border-vita/20 bg-white p-3"
+    >
+      {questions.map((q) => (
+        <fieldset key={q.id}>
+          <legend className="text-xs font-semibold text-ink">
+            {q.label}
+            <span className="ml-1 font-normal text-muted">{q.multiple ? "(plusieurs choix possibles)" : "(un seul choix)"}</span>
+          </legend>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {q.options.map((o) => {
+              const on = (picked[q.id] ?? []).includes(o);
+              return (
+                <button
+                  key={o}
+                  type="button"
+                  role={q.multiple ? "checkbox" : "radio"}
+                  aria-checked={on}
+                  onClick={() => toggle(q, o)}
+                  className={`flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                    on ? "border-vita bg-vita text-white" : "border-vita/30 bg-white text-vita hover:bg-vita-soft"
+                  }`}
+                >
+                  {on && (
+                    <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                      <path d="m3 8 3 3 7-7" />
+                    </svg>
+                  )}
+                  {o}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+      ))}
+      <button
+        type="submit"
+        disabled={answered.length === 0}
+        className="w-full rounded-xl bg-vita px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
+      >
+        {answered.length === questions.length || answered.length === 0 ? "Valider mes réponses" : "Valider (les autres questions sont facultatives)"}
+      </button>
+    </form>
   );
 }
 
@@ -288,6 +365,7 @@ export default function VitaChat({ incomingQuestion, compact = false }: Props) {
               sources: event.sources,
               followups: event.followups,
               quickReplies: event.quickReplies,
+              questions: event.questions,
               suggestions: event.suggestions,
               logId: event.logId,
               at: new Date().toISOString(),
@@ -445,7 +523,12 @@ export default function VitaChat({ incomingQuestion, compact = false }: Props) {
                 </div>
               )}
 
-              {/* Réponses en un clic aux questions d'orientation, sous la dernière réponse */}
+              {/* Questions d'orientation en formulaire, sous la dernière réponse */}
+              {i === last && !loading && m.questions && m.questions.length > 0 && (
+                <QuestionForm questions={m.questions} onSubmit={ask} />
+              )}
+
+              {/* Réponses en un clic (refus utile), sous la dernière réponse */}
               {i === last && !loading && m.quickReplies && m.quickReplies.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {m.quickReplies.map((q) => (

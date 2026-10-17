@@ -61,6 +61,10 @@ describe("orientation", () => {
   it("pose les questions manquantes, et seulement celles-là", () => {
     expect(questionsFor(famille).map((q) => q.text)).toEqual(["Quels soins comptent le plus pour vous ?"]);
     expect(questionsFor({ ...famille, besoins: ["optique"] })).toEqual([]);
+    // plusieurs soins peuvent compter : choix multiple ; le budget : une seule réponse
+    const q = questionsFor({ ...famille, budget_mensuel: null });
+    expect(q.find((x) => x.id === "besoins")?.multiple).toBe(true);
+    expect(q.find((x) => x.id === "budget")?.multiple).toBe(false);
   });
 
   it("déduit des besoins de la situation (enfants, 45 ans et plus)", () => {

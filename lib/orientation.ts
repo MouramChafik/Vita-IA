@@ -60,7 +60,7 @@ const PROFILE_SYSTEM = `Tu lis une conversation avec un adhérent de mutuelle et
 Règles :
 - "personnes" : tout le foyer à couvrir. L'adhérent (celui qui écrit) a le rôle "adherent". "Marié" ou "en couple" ajoute un "conjoint". Chaque enfant cité est un "enfant".
 - "statut" : "independant" pour les professions libérales, artisans, commerçants, auto-entrepreneurs (ex. infirmière libérale) ; "inconnu" si rien n'est dit.
-- "besoins" : seulement les priorités exprimées (lunettes -> optique, dents/orthodontie -> dentaire, hôpital -> hospitalisation, ostéopathe -> medecine_douce, protection des revenus, décès, dépendance -> prevoyance).
+- "besoins" : seulement les priorités exprimées (lunettes -> optique, dents/orthodontie -> dentaire, consultations/médecin/spécialiste -> soins_courants, hôpital -> hospitalisation, ostéopathe -> medecine_douce, protection des revenus, décès, dépendance -> prevoyance).
 - "budget_mensuel" : montant total par mois s'il est donné (une fourchette -> la borne haute), sinon null. "pas_de_budget" vaut true si l'utilisateur dit qu'il n'a pas de limite ou ne sait pas.
 - N'invente rien. N'extrais aucune information de santé.`;
 
@@ -85,27 +85,38 @@ export function isOrientationRequest(text: string): boolean {
 // Marqueur ajouté à la fin des questions de Vita : la réponse suivante reste en mode orientation
 export const ORIENTATION_MARKER = "Pour vous orienter";
 
-export type OrientationQuestion = { text: string; quickReplies: string[] };
+// Question posée à l'utilisateur, avec ses réponses proposées.
+// multiple : on peut cocher plusieurs réponses (les soins), sinon une seule (le budget, le foyer).
+export type OrientationQuestion = { id: string; text: string; label: string; multiple: boolean; options: string[] };
 
 // Questions à poser s'il manque l'essentiel (une seule fois par conversation)
 export function questionsFor(profile: Profile): OrientationQuestion[] {
   const questions: OrientationQuestion[] = [];
   if (profile.personnes.length === 0) {
     questions.push({
+      id: "foyer",
       text: "Qui faut-il couvrir : vous seul, votre couple, votre famille avec des enfants ?",
-      quickReplies: ["Moi seul", "Mon couple", "Ma famille avec enfants"],
+      label: "Personnes à couvrir",
+      multiple: false,
+      options: ["Moi seul", "Mon couple", "Ma famille avec enfants"],
     });
   }
   if (profile.besoins.length === 0) {
     questions.push({
+      id: "besoins",
       text: "Quels soins comptent le plus pour vous ?",
-      quickReplies: ["Lunettes et dentaire", "Hospitalisation", "Médecine douce", "Protéger nos revenus"],
+      label: "Mes soins prioritaires",
+      multiple: true,
+      options: ["Lunettes", "Dentaire", "Hospitalisation", "Consultations", "Médecine douce", "Protéger nos revenus"],
     });
   }
   if (profile.budget_mensuel === null && !profile.pas_de_budget) {
     questions.push({
+      id: "budget",
       text: "Quel budget mensuel envisagez-vous pour le foyer ?",
-      quickReplies: ["Moins de 60 €", "60 à 120 €", "Plus de 120 €", "Je ne sais pas"],
+      label: "Mon budget mensuel",
+      multiple: false,
+      options: ["Moins de 60 €", "60 à 120 €", "Plus de 120 €", "Je ne sais pas"],
     });
   }
   return questions;
