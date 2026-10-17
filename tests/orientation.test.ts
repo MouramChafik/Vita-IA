@@ -83,9 +83,11 @@ describe("orientation", () => {
     // pas de produit Jeunes pour un foyer avec une adulte de 47 ans
     expect(sante.some((x) => x.productName.includes("Jeunes"))).toBe(false);
     // l'infirmière libérale est indépendante : la prévoyance revenus arrive en premier
-    expect(prev[0].productName).toBe("Orvalis Prévoyance Revenus");
+    expect(prev[0].productName).toMatch(/Revenus|Indépendants/);
     expect(prev[0].raisons[0]).toContain("infirmière libérale");
     expect(prev.some((x) => x.productName.includes("Décès"))).toBe(true);
+    // une seule piste par type de protection, même si deux organismes en proposent
+    expect(prev.filter((x) => /Revenus|Indépendants/.test(x.productName))).toHaveLength(1);
   });
 
   it("signale une formule au-dessus du budget", () => {

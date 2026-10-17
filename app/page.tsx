@@ -22,6 +22,7 @@ const GARANTIES: { soin: string; detail: string; valeurs: [string, string, strin
 const PRIX = ["29 €", "48 €", "74 €"];
 
 const DOCUMENTS = [
+  { titre: "Gamme Vita 2026", pages: "5 pages", fichier: "/documents/vita-gamme-2026.pdf", question: "Quels produits propose la gamme Vita 2026 ?" },
   { titre: "Notice d'information 2026", pages: "4 pages", fichier: "/documents/vita-notice-2026.pdf", question: "Quels soins ne sont pas remboursés par Vita Mutuelle ?" },
   { titre: "Tableau des garanties 2026", pages: "1 page", fichier: "/documents/vita-tableau-garanties-2026.pdf", question: "Que rembourse la formule Équilibre pour l'hospitalisation ?" },
   { titre: "Guide du 100 % Santé", pages: "2 pages", fichier: "/documents/vita-guide-100-sante.pdf", question: "Qu'est-ce que le 100 % Santé pour les lunettes ?" },

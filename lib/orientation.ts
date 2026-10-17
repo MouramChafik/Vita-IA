@@ -123,6 +123,7 @@ export type Suggestion = {
   kind: "sante" | "prevoyance";
   raisons: string[]; // pourquoi cette piste, en langage simple
   score: number;
+  theme?: string; // type de protection (prévoyance), pour n'en garder qu'une par type
 };
 
 const CATEGORY_TEXT: Record<string, string> = {
@@ -196,7 +197,9 @@ export function suggest(profile: Profile, offers: Offer[]): Suggestion[] {
           raisons.push("À partir de 45 ans, anticiper une perte d'autonomie coûte moins cher.");
         }
         if (raisons.length) {
-          prevoyance.push({ ...base, formule: null, prix: null, kind: "prevoyance", raisons, score: theme === "revenus" ? 3 : theme === "deces" ? 2 : 1 });
+          // Tarif de départ du produit, s'il est connu (formules triées dans l'ordre du document)
+          const from = product.formules.find((f) => f.prix !== null)?.prix ?? null;
+          prevoyance.push({ ...base, formule: null, prix: from ? `dès ${from}` : null, kind: "prevoyance", raisons, score: theme === "revenus" ? 3 : theme === "deces" ? 2 : 1, theme });
         }
         continue;
       }
@@ -244,7 +247,10 @@ export function suggest(profile: Profile, offers: Offer[]): Suggestion[] {
 
   sante.sort((a, b) => b.score - a.score);
   prevoyance.sort((a, b) => b.score - a.score);
-  return [...sante.slice(0, 3), ...prevoyance.slice(0, 2)];
+  // Une seule piste par type de protection (revenus, décès, autonomie) : des protections
+  // complémentaires plutôt que deux fois la même chez deux organismes
+  const oneByTheme = prevoyance.filter((p, i) => prevoyance.findIndex((q) => q.theme === p.theme) === i);
+  return [...sante.slice(0, 3), ...oneByTheme.slice(0, 2)];
 }
 
 // ---------- 4. Explication par le LLM ----------

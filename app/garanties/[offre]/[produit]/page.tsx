@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import OfferHeader from "@/components/OfferHeader";
 import ProductCard from "@/components/ProductCard";
-import ProductImage, { PHOTOS, themeFor } from "@/components/ProductImage";
+import ProductImage, { photoFor, themeFor } from "@/components/ProductImage";
 import ProductTable from "@/components/ProductTable";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
@@ -67,6 +67,8 @@ async function ProductContent({ params }: { params: Props["params"] }) {
   const { offer, product } = found;
   const others = offer.products.filter((p) => p.slug !== product.slug).slice(0, 3);
   const theme = themeFor(product.name, product.categories);
+  const variant = offer.base ? 0 : 1; // photo différente pour les offres ajoutées
+  const photo = photoFor(theme, variant);
 
   // Données structurées : le produit, ses formules (prix mensuel) et le fil d'Ariane
   const url = `${SITE_URL}${productHref(offer.key, product.slug)}`;
@@ -137,11 +139,11 @@ async function ProductContent({ params }: { params: Props["params"] }) {
           </div>
         </div>
         <figure>
-          <ProductImage theme={theme} priority sizes="(min-width: 768px) 45vw, 100vw" className="aspect-[16/10] w-full rounded-3xl" />
+          <ProductImage theme={theme} variant={variant} priority sizes="(min-width: 768px) 45vw, 100vw" className="aspect-[16/10] w-full rounded-3xl" />
           <figcaption className="mt-2 text-right text-xs text-muted">
             Photo :{" "}
-            <a href={PHOTOS[theme].page} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-ink">
-              {PHOTOS[theme].author}, Unsplash
+            <a href={photo.page} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-ink">
+              {photo.author}, Unsplash
             </a>
           </figcaption>
         </figure>

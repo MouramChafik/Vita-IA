@@ -172,7 +172,7 @@ npm run ingest -- public/documents/vita-guide-100-sante.pdf "Guide du 100 % Sant
 npm run dev
 ```
 
-Les PDF de démonstration sont générés par `scripts/generate-documents.py` (reportlab).
+Les PDF de démonstration sont générés par `scripts/generate-documents.py` (reportlab). La brochure « Gamme Vita 2026 » est générée par `npm run gamme` à partir de `lib/vita-catalog.ts`, la même source que la page Garanties, puis indexée avec `npm run ingest`.
 
 ## Structure
 
@@ -199,7 +199,7 @@ tests/                     tests Vitest
 
 ## Crédits photos
 
-Les photos des produits sont libres de droits ([licence Unsplash](https://unsplash.com/license)) : National Cancer Institute, Eliott Reyna, Hector Reyes, Ryno Marais, Mike Scheid, Age Cymru, David Travis et SoyBreno. Chaque page produit crédite sa photo.
+Les photos des produits sont libres de droits ([licence Unsplash](https://unsplash.com/license)) : National Cancer Institute, Eliott Reyna, Hector Reyes, Ryno Marais, Mike Scheid, Age Cymru, David Travis, SoyBreno, Online Marketing, Simon Maage, Sven Mieke, Bob van Aubel, Kevin Delvecchio, Matt Bennett, Harpreet Singh et Harold Hisona. Chaque page produit crédite sa photo.
 
 ## Stack
 

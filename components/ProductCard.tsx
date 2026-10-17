@@ -28,6 +28,7 @@ export default function ProductCard({
     >
       <ProductImage
         theme={themeFor(product.name, product.categories)}
+        variant={offerKey === "vita" ? 0 : 1}
         className={`aspect-[16/9] w-full ${wide ? "md:aspect-auto md:w-[45%] md:shrink-0" : ""}`}
         sizes={wide ? "(min-width: 768px) 45vw, 100vw" : undefined}
       />
